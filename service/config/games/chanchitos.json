@@ -1,0 +1,110 @@
+{
+    "_comentario": "Los 3 Chanchitos del Banco. 'math' define el RTP: si lo cambiás, volvé a medirlo con: php tools/slot_sim.php chanchitos 1000000",
+    "enabled": true,
+    "name": "Los 3 Chanchitos del Banco",
+    "bet_levels": [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
+    "max_win": 2500,
+    "buy": {
+        "giros": { "enabled": true, "name": "Giros gratis", "price": 40 },
+        "candado": { "enabled": true, "name": "Candado y Carga", "price": 43 }
+    },
+    "sounds": { "spin": "claudia/slot_giro", "stop": "claudia/slot_parada", "win": "claudia/ganar", "bigwin": "claudia/slot_granpremio", "bonus": "claudia/slot_bonus", "coin": "claudia/slot_moneda", "lose": "claudia/perder" },
+    "math": {
+        "reels": 5,
+        "rows": 3,
+        "lines": [
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [2, 2, 2, 2, 2],
+            [0, 1, 2, 1, 0],
+            [2, 1, 0, 1, 2],
+            [0, 0, 1, 2, 2],
+            [2, 2, 1, 0, 0],
+            [1, 0, 0, 0, 1],
+            [1, 2, 2, 2, 1],
+            [0, 1, 1, 1, 0],
+            [2, 1, 1, 1, 2],
+            [1, 0, 1, 2, 1],
+            [1, 2, 1, 0, 1],
+            [0, 1, 0, 1, 0],
+            [2, 1, 2, 1, 2],
+            [1, 1, 0, 1, 1],
+            [1, 1, 2, 1, 1],
+            [0, 0, 2, 0, 0],
+            [2, 2, 0, 2, 2],
+            [0, 2, 2, 2, 0],
+            [2, 0, 0, 0, 2],
+            [1, 0, 2, 0, 1],
+            [1, 2, 0, 2, 1],
+            [0, 2, 0, 2, 0],
+            [2, 0, 2, 0, 2]
+        ],
+        "symbols": {
+            "pica": {
+                "weight": 20,
+                "pays": { "3": 11.0, "4": 32.0, "5": 85.0 }
+            },
+            "trebol": {
+                "weight": 20,
+                "pays": { "3": 11.0, "4": 32.0, "5": 85.0 }
+            },
+            "diamante": {
+                "weight": 18,
+                "pays": { "3": 11.0, "4": 43.0, "5": 107.0 }
+            },
+            "corazon": {
+                "weight": 18,
+                "pays": { "3": 11.0, "4": 43.0, "5": 107.0 }
+            },
+            "billete": {
+                "weight": 12,
+                "pays": { "3": 21.0, "4": 64.0, "5": 213.0 }
+            },
+            "bolsa": {
+                "weight": 10,
+                "pays": { "3": 32.0, "4": 85.0, "5": 320.0 }
+            },
+            "lingote": {
+                "weight": 8,
+                "pays": { "3": 43.0, "4": 128.0, "5": 534.0 }
+            },
+            "caja": {
+                "weight": 6,
+                "pays": { "3": 53.0, "4": 213.0, "5": 1067.0 }
+            }
+        },
+        "wild": {
+            "reels": [1, 2, 3],
+            "weight": 3,
+            "fs_weight": 6,
+            "sizes": { "1": 60, "2": 28, "3": 12 },
+            "fs_sizes": { "1": 35, "2": 35, "3": 30 },
+            "pays": { "3": 53.0, "4": 213.0, "5": 1067.0 }
+        },
+        "scatter": {
+            "reels": [0, 2, 4],
+            "weight": 8.5,
+            "fs_weight": 8.5,
+            "pay": 2,
+            "spins": 10,
+            "retrigger": 10,
+            "max_spins": 100
+        },
+        "coins": {
+            "wolf_weight": 16,
+            "piggy_weight": 3.5,
+            "piggy_reels": [1, 2, 3],
+            "in_free_spins": false,
+            "trigger": 6,
+            "values": { "1": 40, "2": 25, "3": 15, "5": 10, "8": 5, "10": 3, "15": 1.2, "50": 0.3 }
+        },
+        "hold": {
+            "respins": 3,
+            "cell_chance": 0.05,
+            "piggy_share": 0.1,
+            "values": { "1": 40, "2": 25, "3": 15, "5": 10, "8": 5, "10": 3, "15": 1.5, "50": 0.4, "200": 0.08 },
+            "jackpots": { "15": "MINI", "50": "MINOR", "200": "MAJOR" },
+            "grand": 1000
+        }
+    }
+}

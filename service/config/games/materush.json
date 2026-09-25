@@ -1,0 +1,56 @@
+{
+    "_comentario": "Mate Rush. Pagos en x apuesta total por tamaño de cluster. Si cambiás 'math', medí el RTP con: php tools/slot_sim.php materush 300000",
+    "enabled": true,
+    "name": "Mate Rush",
+    "bet_levels": [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000],
+    "max_win": 10000,
+    "buy": {
+        "giros": { "enabled": true, "name": "Giros gratis", "price": 106 },
+        "super": { "enabled": true, "name": "Súper giros (casillas en x4)", "price": 827 }
+    },
+    "sounds": { "spin": "claudia/slot_giro", "stop": "claudia/slot_parada", "pop": "claudia/slot_cascada", "win": "claudia/ganar", "bigwin": "claudia/slot_granpremio", "bonus": "claudia/slot_bonus", "rush": "claudia/slot_moneda", "lose": "claudia/perder" },
+    "math": {
+        "cols": 5,
+        "rows": 5,
+        "min_cluster": 4,
+        "symbols": {
+            "termo": {
+                "weight": 8,
+                "pays": { "4": 1.8, "5": 2.6, "6": 3.4, "7": 5.3, "8": 8.7, "10": 18.0, "12": 34.0, "15": 87.0, "20": 263.0 }
+            },
+            "mate": {
+                "weight": 10,
+                "pays": { "4": 1.1, "5": 1.8, "6": 2.6, "7": 3.4, "8": 5.3, "10": 11.0, "12": 22.0, "15": 53.0, "20": 174.0 }
+            },
+            "yerba": {
+                "weight": 12,
+                "pays": { "4": 0.71, "5": 1.1, "6": 1.8, "7": 2.6, "8": 3.4, "10": 7.1, "12": 14.0, "15": 34.0, "20": 105.0 }
+            },
+            "bombilla": {
+                "weight": 14,
+                "pays": { "4": 0.53, "5": 0.71, "6": 1.1, "7": 1.8, "8": 2.6, "10": 5.3, "12": 11.0, "15": 26.0, "20": 71.0 }
+            },
+            "pava": {
+                "weight": 15,
+                "pays": { "4": 0.34, "5": 0.53, "6": 0.87, "7": 1.4, "8": 1.8, "10": 3.4, "12": 7.1, "15": 18.0, "20": 53.0 }
+            },
+            "tortafrita": {
+                "weight": 16,
+                "pays": { "4": 0.26, "5": 0.34, "6": 0.71, "7": 1.1, "8": 1.4, "10": 2.6, "12": 5.3, "15": 14.0, "20": 34.0 }
+            },
+            "galleta": {
+                "weight": 17,
+                "pays": { "4": 0.18, "5": 0.26, "6": 0.53, "7": 0.87, "8": 1.1, "10": 1.8, "12": 3.4, "15": 8.7, "20": 26.0 }
+            }
+        },
+        "bonus": { "weight": 1.05, "fs_weight": 1.2, "trigger": 3, "spins": 12, "retrigger_count": 2, "retrigger": 3, "max_spins": 60 },
+        "rush": {
+            "weight": 0.6,
+            "fs_weight": 0.9,
+            "values": { "2": 40, "3": 25, "5": 15, "10": 8, "25": 3, "50": 1, "100": 0.3 }
+        },
+        "cells": { "base_max": 256, "fs_max": 1024, "super_start": 4 },
+        "electric": { "chance": 0.04, "min": 4, "max": 7 },
+        "sync": { "chance": 0.2, "cells": 3 }
+    }
+}

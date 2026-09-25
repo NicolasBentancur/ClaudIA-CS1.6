@@ -1,0 +1,51 @@
+{
+    "_comentario": "Parejas, casamientos, adopciones y familias. Los tiempos van en segundos.",
+
+    "proposal_seconds": 90,
+    "max_children": 4,
+    "max_ex": 5,
+    "surname_max_length": 20,
+
+    "marriage": {
+        "_comentario": "Si requires_ring es true, para /casarse hay que tener un anillo (se compra en /tienda y se gasta cuando aceptan).",
+        "requires_ring": true,
+        "ring_item": "anillo"
+    },
+
+    "kiss": {
+        "cooldown_seconds": 20,
+        "partner_lines": [
+            "{a} le dio un beso de novela a {b}",
+            "{a} le comió la boca a {b} delante de todos",
+            "{a} le dio un besito en la frente a {b}",
+            "{a} y {b} se dieron un beso que ni en la telenovela de las 9"
+        ],
+        "lines": [
+            "{a} le tiró un beso a {b}",
+            "{a} le dio un beso en el cachete a {b}",
+            "{a} le mandó un beso volado a {b}"
+        ],
+        "jealous_lines": [
+            "Cuidado {a}, que {c} está mirando...",
+            "Uh, a {c} no le va a gustar nada esto.",
+            "{c}, ¿vos viste lo que hizo {a}?"
+        ]
+    },
+
+    "cupid": {
+        "_comentario": "/formarpareja elige al azar dos jugadores solteros conectados; los dos tienen que /aceptar.",
+        "cooldown_seconds": 300,
+        "lines": [
+            "Claudia hizo de celestina: {a} y {b}, ¿se animan? Escriban /aceptar los dos.",
+            "Yo los veo muy bien juntos a {a} y {b}. Si les pinta, /aceptar los dos.",
+            "Me dijo un pajarito que {a} y {b} se miran de reojo... /aceptar los dos y listo."
+        ]
+    },
+
+    "yes_no": {
+        "cooldown_seconds": 10,
+        "yes": ["Sí, obvio.", "Sí, clavado.", "De una, sí.", "Sin dudas que sí.", "Sí, te lo firmo.", "Y... sí, qué va a ser."],
+        "no": ["No, ni ahí.", "No, olvidate.", "Ni en pedo.", "No, para nada.", "Mmm, no.", "No, y no insistas."],
+        "maybe": ["Capaz... preguntame más tarde.", "Ni idea, tirá una moneda.", "Depende de cómo amanezca.", "Está difícil, ni yo sé."]
+    }
+}

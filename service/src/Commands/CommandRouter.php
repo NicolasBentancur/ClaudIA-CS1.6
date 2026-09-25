@@ -6,6 +6,7 @@ namespace Claudia\Commands;
 
 use Claudia\Log;
 use Claudia\Net\Out;
+use Claudia\Players\Role;
 use Claudia\Players\Session;
 use Claudia\UserError;
 
@@ -69,7 +70,9 @@ final class CommandRouter
         if ($cmd === null) {
             return;
         }
-        $ctx = new CommandContext($session, $cmd['main'], $args, $staff, $admin, $this->out);
+        // El rol viene del plugin (Session::$role); $staff/$admin solo pueden subirlo (tests y llamadas viejas).
+        $role = max($session->role, $staff ? Role::STAFF : ($admin ? Role::ADMIN : Role::USER));
+        $ctx = new CommandContext($session, $cmd['main'], $args, $role >= Role::STAFF, $role >= Role::ADMIN, $this->out, $role);
         try {
             if ($cmd['login']) {
                 $ctx->userId();

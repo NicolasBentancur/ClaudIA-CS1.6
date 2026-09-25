@@ -1,7 +1,7 @@
 /*
  * Claudia - Estadísticas
  *
- * Cuenta kills, muertes, headshots, disparos, impactos y tiempo jugado de cada jugador
+ * Cuenta kills, muertes, headshots, disparos, impactos, tiempo jugado y rondas de cada jugador
  * identificado, y los manda al servicio por lotes (cada 60 s y al desconectarse).
  * Solo usa hamsandwich/fakemeta (no depende de ReGameDLL).
  *
@@ -34,10 +34,11 @@ enum _:StatFields
 	ST_HEADSHOTS,
 	ST_SHOTS,
 	ST_HITS,
-	ST_PLAYTIME
+	ST_PLAYTIME,
+	ST_ROUNDS
 };
 
-new const FIELD_NAMES[StatFields][] = { "kills", "deaths", "headshots", "shots", "hits", "playtime" };
+new const FIELD_NAMES[StatFields][] = { "kills", "deaths", "headshots", "shots", "hits", "playtime", "rounds" };
 
 new const WEAPONS[][] =
 {
@@ -57,6 +58,7 @@ public plugin_init()
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
 	register_event("DeathMsg", "ev_death", "a");
+	register_logevent("ev_round_end", 2, "1=Round_End");
 	for (new i = 0; i < sizeof WEAPONS; i++)
 	{
 		RegisterHam(Ham_Weapon_PrimaryAttack, WEAPONS[i], "fw_attack_pre", false);
@@ -105,6 +107,22 @@ public ev_death()
 		if (headshot)
 		{
 			g_Stats[killer][ST_HEADSHOTS]++;
+		}
+	}
+}
+
+/** Fin de ronda: cuenta una ronda jugada a cada identificado que está en un equipo (cuotas de los grupos). */
+public ev_round_end()
+{
+	new players[MAX_PLAYERS], num;
+	get_players(players, num, "ch");
+	for (new i = 0; i < num; i++)
+	{
+		new id = players[i];
+		new CsTeams:team = cs_get_user_team(id);
+		if (tracked(id) && (team == CS_TEAM_T || team == CS_TEAM_CT))
+		{
+			g_Stats[id][ST_ROUNDS]++;
 		}
 	}
 }

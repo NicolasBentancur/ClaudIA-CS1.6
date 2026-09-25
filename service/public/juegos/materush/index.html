@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mate Rush - Claudia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../comun/comun.css">
+<link rel="stylesheet" href="../slots/slots.css">
+<link rel="stylesheet" href="materush.css">
+</head>
+<body>
+<div id="stage" class="stage">
+    <div class="topbar">
+        <span class="title" id="title">Mate Rush</span>
+        <div class="stat"><small>Saldo</small><b id="balance">-</b></div>
+        <div class="stat"><small>Ganancia</small><b id="lastwin">0</b></div>
+        <div class="spacer"></div>
+        <span class="hint">Clusters de 4 o más</span>
+    </div>
+
+    <div class="side l">
+        <div class="panel" id="pFs"><small>Giros gratis</small><b>-</b></div>
+        <div class="panel" id="pSpin"><small>Este giro</small><b>0</b></div>
+    </div>
+    <div class="side r">
+        <div class="panel" id="pMax"><small>Mayor casilla</small><b>-</b></div>
+        <div class="panel" id="pRush"><small>Rayos</small><b>-</b></div>
+    </div>
+
+    <div class="bottombar">
+        <div class="betctl">
+            <button id="betDown">-</button>
+            <div class="amount"><small>APUESTA</small><span id="betAmount">0</span></div>
+            <button id="betUp">+</button>
+        </div>
+        <span class="rgroup"><button id="buyBtn">Comprar bonus</button> <button id="turbo" class="turbo">Turbo</button> <button id="spin" class="primary spinbtn">GIRAR</button></span>
+    </div>
+
+    <div class="buybox" id="buybox"><h3>Comprar bonus</h3><div id="buyList"></div><button id="buyClose">Cancelar</button></div>
+    <div class="banner" id="banner"></div>
+    <div id="toast" class="toast"></div>
+    <div id="overlay" class="overlay"></div>
+</div>
+<script src="../comun/claudia.js"></script>
+<script src="../slots/simbolos.js"></script>
+<script src="../slots/slots.js"></script>
+<script src="materush.js"></script>
+</body>
+</html>

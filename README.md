@@ -74,6 +74,16 @@ Pasos:
 
 Para ver el estado de la conexión, escribí `claudia_status` en la consola del servidor.
 
+## Menú
+
+`/menu` (o una tecla con `bind "F3" "claudia_menu"`) abre un menú de HUD con todo: perfil, economía y bancos, trabajo, casino, pareja y familia, grupo, tienda y más opciones. Los menús cambian según la situación del jugador (con o sin pareja, miembro o dueño de grupo, propuestas pendientes). Cuando hace falta un monto o un texto, se abre la barra para escribir.
+
+Los admins ven además **Administración** (`/admin`). Las opciones dependen del rol (ver `service/config/roles.json`):
+
+- **admin:** jugadores (perfil, borrar apodo, sacar de un grupo), grupos (ver, editar, agregar y sacar miembros), anuncios de Claudia y el menú de AMX Mod X.
+- **staff:** todo lo anterior, más el perfil completo, dar/quitar coins (hasta 10.000 por vez), borrar la memoria de la IA, crear y eliminar grupos, cambiar dueños y silenciar a Claudia.
+- **owner:** todo, más contraseñas temporales, perdonar deudas, activar promociones, recargar la configuración y ver el estado del servicio.
+
 ## Comandos
 
 | Comando | Qué hace |
@@ -88,7 +98,18 @@ Para ver el estado de la conexión, escribí `claudia_status` en la consola del 
 | `/trabajos`, `/empleadores <trabajo>`, `/postular <trabajo> <empleador>`, `/trabajo`, `/cobrar`, `/renunciar` | Trabajos. |
 | `/cumple DD/MM`, `/recordar <30m\|2h\|1d\|DD/MM [HH:MM]> <texto>`, `/recordatorios`, `/borrarrecordatorio <n>` | Recordatorios. |
 | `/ruleta`, `/blackjack`, `/casino` | Casino (MOTD). |
+| `/chanchitos`, `/dulce`, `/materush`, `/slots` | Slots (MOTD): Los 3 Chanchitos del Banco, Dulce de Leche Bonanza y Mate Rush. |
+| `/pareja <nick>`, `/aceptar`, `/rechazar`, `/mipareja [nick]`, `/terminar`, `/ex [nick]` | Parejas (una a la vez; se guardan las últimas 5 ex). |
+| `/casarse`, `/si`, `/no` | Casamiento (hace falta un anillo de la tienda). `/si` y `/no` también responden adopciones. |
+| `/adoptar <nick>`, `/familia [nick]`, `/apellido <texto>`, `/familias`, `/emancipar`, `/desheredar <nick>` | Familia: solo los casados adoptan (máximo 4 hijos). El árbol muestra pareja, padres, hijos, hermanos, abuelos, tíos y primos. |
+| `/formarpareja`, `/besar <nick>`, `/siono <pregunta>` | Social: Claudia hace de celestina, besos y preguntas de sí o no. |
+| `/tienda`, `/comprar <objeto>`, `/inventario` | Tienda (grupo propio, anillo). |
+| `/creargrupo`, `/grupos`, `/grupo [nombre]`, `/miembros [nombre]`, `/unirse <nombre>`, `/salirg`, `/topgrupos`, `/g <mensaje>` | Grupos: el nombre, tag, descripción y privacidad se completan por chat. Los miembros hablan con `[TAG]nick`. |
+| `/solicitudes`, `/aceptarg <nick>`, `/rechazarg <nick>`, `/expulsarg <nick>`, `/traspasarg <nick>`, `/editarg ...`, `/disolver` | Dueño del grupo. |
+| `/donar <monto>`, `/fondo`, `/fondo dar <nick> <monto>` | Fondo común del grupo (cuotas cada 100 rondas, impuesto del 15% cada 300 rondas del dueño). |
+| `/cancelar` | Cancela el formulario por chat que estés completando. |
 | `amx_darcoins <nick> <monto>`, `amx_quitarcoins <nick> <monto>`, `amx_claudia_reload` | Admin (consola). |
+| `/admingrupo <acción>` (chat, alias `/ag`) o `amx_grupo <acción>` (consola); atajos `amx_crearg <dueño> <tag> <nombre>` y `amx_borrarg <grupo>` | Admin de grupos: `crear`, `borrar`, `info`, `lista`, `renombrar`, `tag`, `desc`, `privacidad`, `dueno`, `agregar`, `expulsar`. Los admins crean gratis; al borrar, el fondo se reparte entre los miembros. |
 
 Para hablar con Claudia, nombrala en el chat global o en el de muertos ("claudia", "clau", ...). También contesta si comentás algo en los 20 s siguientes a jugar en el casino.
 

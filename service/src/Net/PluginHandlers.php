@@ -6,7 +6,8 @@ namespace Claudia\Net;
 
 use Claudia\App;
 use Claudia\Commands\EconomyCommands;
-use Claudia\Log;
+use Claudia\Commands\GroupAdminCommands;
+use Claudia\Players\Role;
 use Claudia\Players\Session;
 use Claudia\UserError;
 
@@ -30,19 +31,28 @@ final class PluginHandlers
             $app->sessions->leaveAll();
         });
 
-        $session = function (array $d) use ($app): Session {
+        // Rol que calcula el plugin con las flags de AMXX (los plugins viejos mandan staff/admin).
+        $roleOf = fn (array $d): int => Role::clamp(isset($d['role'])
+            ? (int) $d['role']
+            : ((bool) ($d['staff'] ?? false) ? Role::STAFF : ((bool) ($d['admin'] ?? false) ? Role::ADMIN : Role::USER)));
+
+        $session = function (array $d) use ($app, $roleOf): Session {
             $s = $app->sessions->get((int) ($d['slot'] ?? 0));
             if ($s === null) {
                 throw new UserError('Sesión desconocida, reconectate.', 'no_session');
             }
+            if (isset($d['role']) || isset($d['staff']) || isset($d['admin'])) {
+                $s->role = $roleOf($d);
+            }
             return $s;
         };
 
-        $link->on('player.join', function (array $d) use ($app): array {
+        $link->on('player.join', function (array $d) use ($app, $roleOf): array {
             $slot = (int) $d['slot'];
             $nick = (string) $d['nick'];
             $ip = (string) ($d['ip'] ?? '');
             $s = $app->sessions->join($slot, $nick, $ip, (string) ($d['authid'] ?? ''));
+            $s->role = $roleOf($d);
             $s->registered = $app->auth->isRegistered($nick);
             $resumeId = $app->sessions->takeResume($nick, $ip);
             if ($resumeId === null && ($d['was_logged'] ?? false) && $s->registered) {
@@ -56,6 +66,8 @@ final class PluginHandlers
         });
 
         $link->on('player.leave', function (array $d) use ($app): array {
+            $app->flows->drop((int) $d['slot']);
+            $app->menus->drop((int) $d['slot']);
             $s = $app->sessions->leave((int) $d['slot']);
             if ($s?->userId !== null) {
                 $app->games->closeForUser($s->userId);
@@ -98,8 +110,28 @@ final class PluginHandlers
             return [];
         });
 
+        // Respuesta a un formulario por chat (el plugin la captura sin mostrarla en el chat).
+        $link->on('input', function (array $d) use ($app, $session): array {
+            $app->flows->input($session($d), (string) ($d['text'] ?? ''));
+            return [];
+        });
+
+        // Menús de HUD: opción elegida, texto pedido con messagemode y menú cerrado.
+        $link->on('menu.select', function (array $d) use ($app, $session): array {
+            $app->menus->select($session($d), (int) ($d['menu'] ?? 0), (int) ($d['item'] ?? -1), (int) ($d['page'] ?? 0));
+            return [];
+        });
+        $link->on('menu.input', function (array $d) use ($app, $session): array {
+            $app->menus->input($session($d), (string) ($d['text'] ?? ''));
+            return [];
+        });
+        $link->on('menu.close', function (array $d) use ($app, $session): array {
+            $app->menus->close($session($d));
+            return [];
+        });
+
         $link->on('cmd', function (array $d) use ($app, $session): array {
-            $app->commands->dispatch($session($d), (string) ($d['name'] ?? ''), (string) ($d['args'] ?? ''), (bool) ($d['staff'] ?? false), (bool) ($d['admin'] ?? false));
+            $app->commands->dispatch($session($d), (string) ($d['name'] ?? ''), (string) ($d['args'] ?? ''));
             return [];
         });
 
@@ -108,30 +140,33 @@ final class PluginHandlers
                 $s = $app->sessions->get((int) ($p['slot'] ?? 0));
                 if ($s !== null && $s->userId !== null) {
                     $app->stats->add($s->userId, (array) $p);
+                    $app->groups->onActivity($s->userId, max(0, (int) ($p['kills'] ?? 0)), max(0, (int) ($p['rounds'] ?? 0)));
                 }
             }
             return [];
         });
 
-        $link->on('admin.coins', function (array $d) use ($app): array {
+        $link->on('admin.coins', function (array $d) use ($app, $roleOf): array {
             $msg = EconomyCommands::adminCoins(
                 $app,
                 (int) ($d['slot'] ?? 0),
                 (string) ($d['admin_name'] ?? 'consola'),
                 (string) ($d['target'] ?? ''),
                 (string) ($d['amount'] ?? ''),
-                ($d['mode'] ?? 'give') === 'give'
+                ($d['mode'] ?? 'give') === 'give',
+                isset($d['role']) ? $roleOf($d) : Role::OWNER
             );
             return ['message' => $msg];
         });
 
-        $link->on('admin.reload', function (array $d) use ($app): array {
-            $app->config->reload();
-            $app->out->setTag($app->config->string('service.chat_tag', '{green}[Claudia]{default} '));
-            $app->recentGames->setWindow($app->config->int('ai.recent_game_seconds', 20));
-            $app->loans->syncBanks();
-            Log::info('Configuración recargada');
-            return ['message' => 'Configuración de Claudia recargada.'];
+        // amx_grupo / amx_crearg / amx_borrarg (el plugin ya verificó las flags de admin).
+        $link->on('admin.group', function (array $d) use ($app, $roleOf): array {
+            $lines = GroupAdminCommands::run($app, (string) ($d['admin_name'] ?? 'consola'), (string) ($d['args'] ?? ''), isset($d['role']) ? $roleOf($d) : Role::OWNER);
+            return ['message' => $lines[0], 'lines' => array_slice($lines, 1)];
+        });
+
+        $link->on('admin.reload', function (array $d) use ($app, $roleOf): array {
+            return ['message' => $app->admin->reloadConfig(isset($d['role']) ? $roleOf($d) : Role::OWNER, (string) ($d['admin_name'] ?? 'consola'))];
         });
     }
 }

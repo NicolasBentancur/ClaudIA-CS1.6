@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Claudia;
 
+use Claudia\Admin\AdminService;
 use Claudia\Ai\AiRouter;
 use Claudia\Ai\ChatBuffer;
 use Claudia\Ai\ChatService;
@@ -14,12 +15,18 @@ use Claudia\Ai\Provider;
 use Claudia\Ai\RecentGames;
 use Claudia\Ai\TriggerPolicy;
 use Claudia\Auth\AuthService;
+use Claudia\Commands\ChatFlows;
+use Claudia\Commands\CommandContext;
 use Claudia\Commands\CommandRouter;
 use Claudia\Commands\EconomyCommands;
+use Claudia\Commands\FamilyCommands;
 use Claudia\Commands\GameCommands;
 use Claudia\Commands\GeneralCommands;
+use Claudia\Commands\GroupAdminCommands;
+use Claudia\Commands\GroupCommands;
 use Claudia\Commands\JobCommands;
 use Claudia\Commands\ReminderCommands;
+use Claudia\Commands\ShopCommands;
 use Claudia\Economy\LoanService;
 use Claudia\Economy\PromotionService;
 use Claudia\Economy\Wallet;
@@ -29,16 +36,29 @@ use Claudia\Games\GameManager;
 use Claudia\Games\GameSession;
 use Claudia\Games\Roulette\BallPhysics;
 use Claudia\Games\Roulette\RouletteGame;
+use Claudia\Games\Slots\SlotFactory;
+use Claudia\Games\Slots\SlotGame;
 use Claudia\Games\Timers;
+use Claudia\Groups\GroupService;
 use Claudia\Jobs\JobService;
+use Claudia\Menus\AdminMenus;
+use Claudia\Menus\MenuKit;
+use Claudia\Menus\MenuService;
+use Claudia\Menus\PlayerMenus;
 use Claudia\Memory\MemoryService;
 use Claudia\Memory\Summarizer;
 use Claudia\Net\AsyncHttp;
 use Claudia\Net\Out;
+use Claudia\Players\Permissions;
+use Claudia\Players\Session;
 use Claudia\Players\SessionManager;
 use Claudia\Players\Users;
 use Claudia\Reminders\ReminderService;
+use Claudia\Shop\ShopService;
+use Claudia\Social\FamilyService;
+use Claudia\Social\Proposals;
 use Claudia\Stats\StatsService;
+use Claudia\Util\Cooldowns;
 use Claudia\Util\Text;
 
 /**
@@ -72,6 +92,16 @@ final class App
     public readonly ReminderService $reminders;
     public readonly Casino $casino;
     public readonly GameManager $games;
+    public readonly ChatFlows $flows;
+    public readonly Cooldowns $cooldowns;
+    public readonly FamilyService $family;
+    public readonly Proposals $proposals;
+    public readonly GroupService $groups;
+    public readonly ShopService $shop;
+    public readonly Permissions $perms;
+    public readonly AdminService $admin;
+    public readonly MenuService $menus;
+    public readonly PlayerMenus $playerMenus;
 
     /** @var array<string, int> última ejecución de cada tarea periódica */
     private array $lastRun = [];
@@ -100,6 +130,14 @@ final class App
         $this->loans = new LoanService($config, $db, $this->wallet, $this->promos);
         $this->stats = new StatsService($db, $config);
         $this->jobs = new JobService($config, $db, $this->wallet, $this->promos, $this->stats);
+        $this->flows = new ChatFlows($this->out);
+        $this->cooldowns = new Cooldowns();
+        $this->family = new FamilyService($config, $db);
+        $this->proposals = new Proposals();
+        $this->groups = new GroupService($config, $db, $this->wallet);
+        $this->shop = new ShopService($config, $db, $this->wallet);
+        $this->perms = new Permissions($config);
+        $this->menus = new MenuService($this->out);
 
         $this->buffer = new ChatBuffer($config->int('ai.history_messages', 15) + 1);
         $this->recentGames = new RecentGames($config->int('ai.recent_game_seconds', 20));
@@ -119,6 +157,13 @@ final class App
         $this->games = new GameManager($config, $this->out, $this->sessions, $timers ?? new Timers());
         $this->games->register('ruleta', 'Ruleta', fn (GameSession $s) => new RouletteGame($config, $this->games, $this->casino, $this->wallet, new BallPhysics()));
         $this->games->register('blackjack', 'Blackjack', fn (GameSession $s) => new BlackjackGame($config, $this->games, $this->casino, $this->wallet));
+        foreach (array_keys(SlotFactory::GAMES) as $slot) {
+            $this->games->register($slot, $config->string("games.{$slot}.name", $slot), fn (GameSession $s) => new SlotGame($slot, $config, $this->games, $this->casino, $this->wallet));
+        }
+
+        $this->admin = new AdminService($this);
+        $kit = new MenuKit($this);
+        $this->playerMenus = new PlayerMenus($this, $kit, new AdminMenus($this, $kit));
 
         $this->wire();
     }
@@ -142,6 +187,9 @@ final class App
         $debt = $this->loans->totalDebt($userId);
         if ($debt > 0) {
             $facts[] = 'Debe ' . Text::coins($debt) . ' URU Coins a los bancos' . ($this->loans->inClearing($userId) ? ' y está en el Clearing (moroso)' : '');
+        }
+        foreach ($this->socialFacts($userId) as $f) {
+            $facts[] = $f;
         }
         $s = $this->stats->get($userId);
         $facts[] = "Stats: {$s['kills']} kills, {$s['deaths']} muertes, {$s['accuracy']}% de precisión";
@@ -172,6 +220,66 @@ final class App
         return $user;
     }
 
+    /** Pareja, familia y grupo (para la IA y el perfil). @return list<string> */
+    public function socialFacts(int $userId): array
+    {
+        $facts = [];
+        $rel = $this->family->relationship($userId);
+        if ($rel !== null) {
+            $facts[] = ($rel['status'] === 'casados' ? 'Casado/a con ' : 'De novio/a con ') . $this->nick((int) $rel['partner']);
+        }
+        $tree = $this->family->tree($userId);
+        $names = fn (array $ids) => implode(', ', array_map(fn ($id) => $this->nick((int) $id), $ids));
+        $family = [];
+        if ($tree['surname'] !== null) {
+            $family[] = "apellido {$tree['surname']}";
+        }
+        if ($tree['parents'] !== []) {
+            $family[] = 'padres: ' . $names($tree['parents']);
+        }
+        if ($tree['children'] !== []) {
+            $family[] = 'hijos: ' . $names($tree['children']);
+        }
+        if ($tree['siblings'] !== []) {
+            $family[] = 'hermanos: ' . $names($tree['siblings']);
+        }
+        if ($family !== []) {
+            $facts[] = 'Familia: ' . implode('; ', $family);
+        }
+        $group = $this->groups->ofUser($userId);
+        if ($group !== null) {
+            $facts[] = "Grupo: [{$group['tag']}] {$group['name']}" . ((int) $group['owner_id'] === $userId ? ' (es el dueño)' : '');
+        }
+        return $facts;
+    }
+
+    public function nick(int $userId): string
+    {
+        return (string) ($this->users->find($userId)['nick'] ?? '?');
+    }
+
+    /** Avisa por chat a un usuario si está conectado. */
+    public function notify(int $userId, string $text): void
+    {
+        $s = $this->sessions->byUser($userId);
+        if ($s !== null) {
+            $this->out->chat($s->slot, $text);
+        }
+    }
+
+    /** Busca un jugador conectado y logueado (para propuestas que tiene que contestar en el momento). */
+    public function findOnline(string $query): Session
+    {
+        $s = $this->sessions->findByName(trim($query));
+        if ($s === null) {
+            throw new UserError("No encontré a nadie conectado que se llame \"{$query}\" (o hay varios parecidos).", 'user_not_found');
+        }
+        if ($s->userId === null) {
+            throw new UserError("{$s->nick} no está logueado/a.");
+        }
+        return $s;
+    }
+
     /** Tareas periódicas (se llama cada segundo). */
     public function tick(int $now): void
     {
@@ -186,11 +294,33 @@ final class App
             }
         };
         $every('games', 30, fn () => $this->games->tick());
+        $every('flows', 5, fn () => $this->flows->tick(fn (int $slot) => $this->sessions->get($slot)));
+        $every('proposals', 5, fn () => $this->expireProposals());
         $every('reminders', 15, fn () => $this->reminders->tick());
         $every('loans', 60, fn () => $this->loans->tick());
         $every('promos', 60, fn () => $this->promos->tick());
         $every('resume', 300, fn () => $this->sessions->purgeResume());
         $every('summaries', max(30, $this->config->int('ai.memory.summary_check_interval_seconds', 300)), fn () => $this->summarizer->tick());
+    }
+
+    private function expireProposals(): void
+    {
+        $names = [Proposals::PARTNER => 'de pareja', Proposals::MARRIAGE => 'de casamiento', Proposals::ADOPTION => 'de adopción'];
+        foreach ($this->proposals->purge() as $p) {
+            if (isset($names[$p['kind']])) {
+                $this->notify($p['from'], "{$this->nick($p['to'])} no contestó tu propuesta {$names[$p['kind']]}.");
+            }
+        }
+    }
+
+    /** Recarga los JSON de configuración y aplica lo que se puede aplicar en caliente. */
+    public function reloadConfig(): void
+    {
+        $this->config->reload();
+        $this->out->setTag($this->config->string('service.chat_tag', '{green}[Claudia]{default} '));
+        $this->recentGames->setWindow($this->config->int('ai.recent_game_seconds', 20));
+        $this->loans->syncBanks();
+        Log::info('Configuración recargada');
     }
 
     /** Inicialización que toca la base (al arrancar el servicio). */
@@ -207,6 +337,34 @@ final class App
         JobCommands::register($this);
         ReminderCommands::register($this);
         GameCommands::register($this);
+        FamilyCommands::register($this);
+        GroupCommands::register($this);
+        GroupAdminCommands::register($this);
+        ShopCommands::register($this);
+
+        $this->commands->register('menu', function (CommandContext $c): void {
+            $this->menus->open($c->session, $this->playerMenus->main());
+        }, '- menú con todas las opciones (también: bind una tecla a "claudia_menu")', 'General', true, ['m', 'opciones']);
+
+        $this->commands->register('admin', function (CommandContext $c): void {
+            $this->perms->check($c->role, 'admin.menu');
+            $this->menus->open($c->session, $this->playerMenus->adminMenu());
+        }, '- menú de administración (admin, staff u owner)', 'Admin', false, ['adm', 'staff']);
+
+        $this->commands->register('cancelar', function (CommandContext $c): void {
+            if (!$this->flows->has($c->session)) {
+                throw new UserError('No tenés nada para cancelar.');
+            }
+            $this->flows->cancel($c->session, false);
+        }, '- cancelar el formulario que estés completando', 'General', false);
+
+        $this->groups->setNotifier(fn (int $uid, string $msg) => $this->notify($uid, $msg));
+        $this->groups->onTagChanged(function (int $uid, string $tag): void {
+            $s = $this->sessions->byUser($uid);
+            if ($s !== null) {
+                $this->out->chatTag($s->slot, $tag);
+            }
+        });
 
         $this->loans->setJobInfo(fn (int $uid) => $this->jobs->info($uid));
         $this->loans->setPlaytime(fn (int $uid) => $this->stats->playtime($uid));
@@ -227,12 +385,20 @@ final class App
         });
         $onLogin = function ($s): void {
             $this->reminders->deliverFor((int) $s->userId);
+            $this->out->chatTag($s->slot, $this->groups->tagOf((int) $s->userId));
+            $owned = $this->groups->ofUser((int) $s->userId);
+            if ($owned !== null && (int) $owned['owner_id'] === (int) $s->userId) {
+                $pending = count($this->groups->requests((int) $owned['id']));
+                if ($pending > 0) {
+                    $this->out->chat($s->slot, "Tenés {$pending} solicitud(es) para entrar a {$owned['name']}. Mirá /solicitudes.");
+                }
+            }
         };
         $this->events->on('auth.login', function ($s, bool $isNew) use ($onLogin): void {
             $name = $this->users->displayName((int) $s->userId);
             $this->out->chat($s->slot, $isNew
-                ? "Listo {$name}, quedaste registrado. Escribí /ayuda para ver lo que podés hacer."
-                : "Bienvenido de nuevo, {$name}.");
+                ? "Listo {$name}, quedaste registrado. Escribí {green}/menu{default} para ver todo lo que podés hacer."
+                : "Bienvenido de nuevo, {$name}. Todo está en {green}/menu{default}.");
             $this->out->authState($s->slot, true, true);
             $onLogin($s);
         });
@@ -241,6 +407,9 @@ final class App
         });
         $this->events->on('auth.logout', function ($s): void {
             $this->games->closeForUser((int) $s->userId);
+            $this->flows->drop($s->slot);
+            $this->menus->drop($s->slot);
+            $this->out->chatTag($s->slot, '');
         });
     }
 }

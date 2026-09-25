@@ -71,6 +71,43 @@ final class Out
         ($this->sink)('motd', ['slot' => $slot, 'title' => $title, 'url' => $url]);
     }
 
+    /** Tag del grupo que el plugin antepone al nick en el chat ("" = sin tag). */
+    public function chatTag(int $slot, string $tag): void
+    {
+        ($this->sink)('chat.tag', ['slot' => $slot, 'tag' => $tag]);
+    }
+
+    /**
+     * Mientras está activo, el plugin no muestra lo que escribe el jugador en el chat y lo manda
+     * como "input" (formularios por chat, ej. crear un grupo). Los /comandos siguen funcionando.
+     */
+    public function capture(int $slot, bool $on): void
+    {
+        ($this->sink)('input.capture', ['slot' => $slot, 'on' => $on]);
+    }
+
+    /**
+     * Menú de HUD (newmenu de AMXX). $items son los textos (pueden tener \w \y \r \d de color);
+     * el plugin devuelve "menu.select" con el índice elegido. La paginación la hace el plugin.
+     * @param list<string> $items
+     */
+    public function menu(int $slot, int $id, string $title, array $items, int $page = 0): void
+    {
+        ($this->sink)('menu', ['slot' => $slot, 'id' => $id, 'title' => $title, 'items' => $items, 'page' => $page]);
+    }
+
+    /** Pide un texto con messagemode (el plugin lo devuelve como "menu.input"). */
+    public function prompt(int $slot, string $label): void
+    {
+        ($this->sink)('prompt', ['slot' => $slot, 'label' => Text::colors($this->tag . $label)]);
+    }
+
+    /** Ejecuta en el cliente un comando de la lista blanca del plugin (ej. "amxmodmenu"). */
+    public function clientCommand(int $slot, string $command): void
+    {
+        ($this->sink)('exec', ['slot' => $slot, 'cmd' => $command]);
+    }
+
     public function authState(int $slot, bool $registered, bool $logged): void
     {
         ($this->sink)('auth.state', ['slot' => $slot, 'registered' => $registered, 'logged' => $logged]);

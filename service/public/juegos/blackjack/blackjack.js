@@ -150,7 +150,7 @@
         dc.innerHTML = '';
         for (var i = 0; i < st.dealer.cards.length; i++) {
             var isNew = !st.init && i >= S.shown.dealer;
-            dc.appendChild(cardEl(st.dealer.cards[i], isNew, isNew ? (i - S.shown.dealer) * 0.15 : 0));
+            dc.appendChild(cardEl(st.dealer.cards[i], isNew, isNew ? (i - S.shown.dealer) * 0.25 : 0));
         }
         S.shown.dealer = st.dealer.cards.length;
         $('dealerValue').textContent = st.dealer.cards.length ? (st.dealer.blackjack ? 'BJ' : st.dealer.value) : '';
@@ -170,7 +170,7 @@
             }
             for (var c = 0; c < hand.cards.length; c++) {
                 var fresh = c >= before;
-                cards.appendChild(cardEl(hand.cards[c], fresh, fresh ? (c - before) * 0.18 : 0));
+                cards.appendChild(cardEl(hand.cards[c], fresh, fresh ? (c - before) * 0.25 : 0));
             }
             nextShown.push(hand.cards.length);
             box.appendChild(cards);

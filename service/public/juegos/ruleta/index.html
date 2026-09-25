@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="../comun/comun.css">
 <link rel="stylesheet" href="ruleta.css">
+<style id="spinAnim"></style>
 </head>
 <body>
 <div id="stage" class="stage">
@@ -21,9 +22,10 @@
     <div class="main">
         <div class="left">
             <div class="wheel-box" id="wheelBox">
+                <div class="wheel-shadow"></div>
                 <div class="pointer-arm" id="pointerArm"><div class="pointer"></div></div>
-                <img class="wheel" id="wheel" src="img/rueda.svg" alt="Ruleta" draggable="false">
-                <div class="ball" id="ball"></div>
+                <canvas class="wheel-canvas" id="wheelCanvas" width="220" height="220"></canvas>
+                <div class="ball-arm" id="ballArm"><div class="ball" id="ball"></div></div>
             </div>
             <div class="result" id="result"><span class="num" id="resultNum">-</span><span class="txt" id="resultTxt">Hagan sus apuestas</span></div>
             <div class="history" id="history"></div>
@@ -44,9 +46,7 @@
                 <button id="clear">Borrar</button>
                 <button id="repeat">Repetir</button>
                 <button id="double">x2</button>
-                <div class="spacer"></div>
-                <span class="status" id="status"></span>
-                <button id="spin" class="primary">GIRAR</button>
+                <span class="rgroup"><span class="status" id="status"></span><button id="spin" class="primary">GIRAR</button></span>
             </div>
         </div>
     </div>

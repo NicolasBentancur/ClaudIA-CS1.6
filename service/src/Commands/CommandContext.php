@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Claudia\Commands;
 
 use Claudia\Net\Out;
+use Claudia\Players\Role;
 use Claudia\Players\Session;
 use Claudia\UserError;
 
@@ -23,6 +24,7 @@ final class CommandContext
         public readonly bool $staff,
         public readonly bool $admin,
         private readonly Out $out,
+        public readonly int $role = Role::USER,
     ) {
         $this->argv = preg_split('/\s+/u', trim($args), -1, PREG_SPLIT_NO_EMPTY) ?: [];
     }

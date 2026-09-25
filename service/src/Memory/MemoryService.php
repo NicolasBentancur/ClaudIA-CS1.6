@@ -32,6 +32,12 @@ final class MemoryService
         $this->db->exec('INSERT INTO memories(user_id, kind, text, created_at) VALUES(?, ?, ?, ?)', [$userId, $kind, $text, Clock::now()]);
     }
 
+    /** Borra todo lo que Claudia recuerda de un usuario. Devuelve cuántos recuerdos borró. */
+    public function forget(int $userId): int
+    {
+        return $this->db->exec('DELETE FROM memories WHERE user_id = ?', [$userId]);
+    }
+
     /**
      * @return array{resumen:?string, pensamientos:list<string>, tratos:list<string>, datos:list<string>}
      */

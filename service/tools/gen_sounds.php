@@ -133,4 +133,47 @@ wav("{$out}/bj_empate.wav", mix(tone(587.33, 0.18, 8, 0.4), offset(tone(587.33, 
 // Recordatorio: campanita de dos notas.
 wav("{$out}/recordatorio.wav", mix(tone(1318.5, 0.6, 5, 0.4, 0.2), offset(tone(987.77, 0.7, 4, 0.4, 0.2), 0.18)));
 
+// Slots: rodillos girando (tic-tic rápido y parejo).
+$n = (int) (RATE * 1.2);
+$reels = [];
+for ($i = 0; $i < $n; $i++) {
+    $t = $i / RATE;
+    $click = exp(-80 * fmod($t * 22, 1.0) / 22 * 10);
+    $env = min(1.0, $t * 10) * min(1.0, (1.2 - $t) * 6);
+    $reels[] = $env * (0.18 * noise() * $click + 0.12 * sin(2 * M_PI * 180 * $t) * $click);
+}
+wav("{$out}/slot_giro.wav", lowpass($reels, 0.4));
+
+// Slots: parada de rodillo (golpe seco grave).
+wav("{$out}/slot_parada.wav", mix(tone(140, 0.12, 30, 0.6, 0.2), lowpass(array_map(fn ($i) => 0.3 * noise() * exp(-120 * $i / RATE), range(0, (int) (RATE * 0.05))), 0.3)));
+
+// Slots: explosión de símbolos en cascada ("pop").
+$pop = [];
+$n = (int) (RATE * 0.12);
+for ($i = 0; $i < $n; $i++) {
+    $t = $i / RATE;
+    $f = 900 - 5000 * $t;
+    $pop[] = 0.5 * exp(-35 * $t) * sin(2 * M_PI * max(200, $f) * $t);
+}
+wav("{$out}/slot_cascada.wav", $pop);
+
+// Slots: moneda / bombón / rayo (ding metálico).
+wav("{$out}/slot_moneda.wav", mix(tone(1975.5, 0.45, 7, 0.35, 0.4), offset(tone(2637.0, 0.4, 8, 0.25, 0.3), 0.05)));
+
+// Slots: entrada a un bonus (fanfarria corta).
+wav("{$out}/slot_bonus.wav", mix(
+    tone(392.0, 0.25, 4, 0.4), offset(tone(523.25, 0.25, 4, 0.4), 0.12), offset(tone(659.25, 0.25, 4, 0.4), 0.24),
+    offset(tone(783.99, 0.8, 2.5, 0.45), 0.36), offset(tone(1046.5, 0.8, 2.5, 0.3), 0.36),
+));
+
+// Slots: gran premio (arpegio largo con brillo).
+$notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5, 1318.5];
+$big = [];
+foreach ($notes as $k => $f) {
+    $big[] = offset(tone($f, 0.5, 4, 0.35, 0.3), $k * 0.11);
+}
+$big[] = offset(tone(1568.0, 1.2, 2, 0.3, 0.2), 0.8);
+$big[] = offset(tone(2093.0, 1.2, 2, 0.2, 0.1), 0.8);
+wav("{$out}/slot_granpremio.wav", mix(...$big));
+
 echo "Sonidos generados en {$out}\n";

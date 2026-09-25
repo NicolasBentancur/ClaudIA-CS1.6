@@ -1,4 +1,4 @@
-/* Ruleta francesa - escenario fijo de 640x440 que se escala a la ventana del MOTD */
+/* Ruleta francesa - escenario fijo de 640x440 escalado a la ventana del MOTD (sin flexbox) */
 body {
     background: #06190f;
 }
@@ -39,15 +39,25 @@ body {
     margin: 6px auto 0;
 }
 
-.wheel {
+/* La ruleta se pinta una vez en un canvas; el giro, el puntero y la bola se mueven con animaciones CSS
+   generadas desde la trayectoria del servidor (ver ruleta.js). La sombra queda fija debajo. */
+.wheel-shadow {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+.wheel-canvas {
     position: absolute;
     left: 0;
     top: 0;
     width: 220px;
     height: 220px;
     z-index: 2;
-    border-radius: 50%;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
 }
 
 /* El puntero va DEBAJO de la ruleta: gira alrededor del centro siguiendo a la bola y asoma por el borde. */
@@ -71,23 +81,31 @@ body {
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
     border-top: 16px solid #ffe08a;
-    -webkit-filter: drop-shadow(0 0 3px #000);
-    filter: drop-shadow(0 0 3px #000);
+}
+
+/* La bola: el brazo gira (ángulo) y la bola se aleja del centro (radio). */
+.ball-arm {
+    position: absolute;
+    left: 110px;
+    top: 110px;
+    width: 0;
+    height: 0;
+    z-index: 3;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
 }
 
 .ball {
     position: absolute;
-    left: 0;
-    top: 0;
+    left: -5px;
+    top: -5px;
     width: 10px;
     height: 10px;
-    margin: -5px 0 0 -5px;
     border-radius: 50%;
     background: #fff;
     background: -webkit-radial-gradient(35% 35%, circle, #fff 0%, #ddd 50%, #888 100%);
     background: radial-gradient(circle at 35% 35%, #fff 0%, #ddd 50%, #888 100%);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-    z-index: 3;
     visibility: hidden;
 }
 
@@ -98,32 +116,31 @@ body {
     background: rgba(0, 0, 0, 0.45);
     border: 1px solid #c9a24a;
     border-radius: 6px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    padding: 0 8px;
+    padding: 5px 8px;
+    white-space: nowrap;
 }
 
 .result .num {
+    display: inline-block;
+    vertical-align: middle;
     width: 34px;
     height: 34px;
+    line-height: 30px;
+    text-align: center;
     border-radius: 50%;
     background: #333;
     color: #fff;
     font-size: 16px;
     font-weight: bold;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     margin-right: 8px;
     border: 2px solid #ffe08a;
 }
 
 .result .txt {
+    display: inline-block;
+    vertical-align: middle;
+    width: 138px;
+    white-space: normal;
     font-size: 12px;
     line-height: 1.2;
 }
@@ -140,18 +157,15 @@ body {
 .history {
     margin: 10px auto 0;
     width: 220px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-wrap: wrap;
-    flex-wrap: wrap;
-    -webkit-justify-content: center;
-    justify-content: center;
+    text-align: center;
+    font-size: 0;
 }
 
 .hist {
+    display: inline-block;
     width: 22px;
     height: 22px;
-    line-height: 22px;
+    line-height: 20px;
     margin: 2px;
     border-radius: 3px;
     text-align: center;
@@ -179,15 +193,11 @@ body {
     top: 0;
     width: 30px;
     height: 105px;
+    line-height: 103px;
+    text-align: center;
     background: #0e7a3b;
     border: 1px solid #e8dcb5;
     border-radius: 14px 0 0 14px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     font-weight: bold;
     font-size: 15px;
     cursor: pointer;
@@ -206,19 +216,17 @@ body {
     position: absolute;
     width: 26px;
     height: 35px;
+    line-height: 33px;
+    text-align: center;
     border: 1px solid #e8dcb5;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     font-weight: bold;
     font-size: 12px;
     pointer-events: none;
 }
 
 .cell span {
+    display: inline-block;
+    vertical-align: middle;
     width: 20px;
     height: 20px;
     line-height: 20px;
@@ -247,15 +255,11 @@ body {
 
 .colbet {
     height: 35px;
+    line-height: 33px;
+    text-align: center;
     border: 1px solid #e8dcb5;
     font-size: 11px;
     font-weight: bold;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     cursor: pointer;
 }
 
@@ -295,37 +299,42 @@ body {
 
 .row {
     position: relative;
-    display: -webkit-flex;
-    display: flex;
     margin-top: 5px;
     width: 386px;
+    white-space: nowrap;
+    font-size: 0;
 }
 
 .dozens, .simples {
     padding-left: 30px;
-    padding-right: 44px;
 }
 
 .opt {
     position: relative;
-    -webkit-flex: 1;
-    flex: 1;
+    display: inline-block;
+    vertical-align: top;
     height: 26px;
+    line-height: 24px;
+    text-align: center;
     border: 1px solid #e8dcb5;
     font-size: 11px;
     font-weight: bold;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     cursor: pointer;
 }
 
-.opt.rojo-opt .dia, .opt.negro-opt .dia {
-    width: 18px;
-    height: 12px;
+.dozens .opt {
+    width: 104px;
+}
+
+.simples .opt {
+    width: 52px;
+}
+
+.opt .dia {
+    display: inline-block;
+    vertical-align: middle;
+    width: 14px;
+    height: 14px;
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
 }
@@ -339,12 +348,14 @@ body {
 }
 
 .announced button {
-    -webkit-flex: 1;
-    flex: 1;
-    margin-right: 4px;
-    padding: 5px 2px;
-    font-size: 11px;
     position: relative;
+    width: 74px;
+    height: 30px;
+    margin-right: 4px;
+    padding: 2px;
+    font-size: 11px;
+    white-space: normal;
+    line-height: 12px;
 }
 
 .announced button:last-child {
@@ -369,12 +380,16 @@ body {
 
 .controls {
     margin-top: 10px;
-    -webkit-align-items: center;
-    align-items: center;
+    height: 34px;
 }
 
 .controls button {
     margin-right: 5px;
+}
+
+.controls .rgroup {
+    right: 0;
+    top: 0;
 }
 
 .controls .primary {
@@ -382,6 +397,8 @@ body {
 }
 
 .status {
+    display: inline-block;
+    vertical-align: middle;
     font-size: 11px;
     color: #c9b88a;
     margin-right: 8px;

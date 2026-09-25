@@ -16,7 +16,7 @@ use Claudia\Util\Text;
 /**
  * Ruleta francesa individual. Flujo:
  *   página -> {"type":"spin","bets":[...]}
- *   servicio -> spin_start, frames (en tiempo real, por bloques), result
+ *   servicio -> spin_start, frames (toda la trayectoria de una vez: la página la pasa a animación CSS), result
  * Sonidos (giro, rebotes, ganar/perder) se reproducen en el juego vía el plugin,
  * sincronizados con los tiempos de la simulación.
  */
@@ -27,8 +27,6 @@ final class RouletteGame implements GameHandler
 
     /** Margen que la página espera antes de reproducir, para absorber la latencia. */
     private const CLIENT_BUFFER = 0.25;
-    private const CHUNK_SECONDS = 0.1;
-    private const LEAD_SECONDS = 0.5;
 
     public function __construct(
         private readonly Config $config,
@@ -91,7 +89,7 @@ final class RouletteGame implements GameHandler
             'total' => $total,
         ]);
         $this->manager->sound($s, 'spin');
-        $this->streamFrames($s, $sim['frames'], 0, 0.0);
+        $s->send(['type' => 'frames', 'f' => $sim['frames'], 'last' => true]);
         foreach ($sim['bounces'] as $t) {
             $this->manager->later($s, $t + self::CLIENT_BUFFER, fn () => $this->manager->sound($s, 'bounce'));
         }
@@ -103,24 +101,6 @@ final class RouletteGame implements GameHandler
         // Si cierran el MOTD a mitad de giro, la ronda se liquida igual.
         if (isset($s->state['round']) && !$s->state['round']['settled']) {
             $this->finish($s, false);
-        }
-    }
-
-    /** @param list<array{0:int,1:float,2:float,3:float}> $frames */
-    private function streamFrames(GameSession $s, array $frames, int $from, float $elapsed): void
-    {
-        $limit = ($elapsed + self::LEAD_SECONDS) * 1000;
-        $chunk = [];
-        $i = $from;
-        while ($i < count($frames) && $frames[$i][0] <= $limit) {
-            $chunk[] = $frames[$i];
-            $i++;
-        }
-        if ($chunk !== []) {
-            $s->send(['type' => 'frames', 'f' => $chunk, 'last' => $i >= count($frames)]);
-        }
-        if ($i < count($frames)) {
-            $this->manager->later($s, self::CHUNK_SECONDS, fn () => $this->streamFrames($s, $frames, $i, $elapsed + self::CHUNK_SECONDS));
         }
     }
 

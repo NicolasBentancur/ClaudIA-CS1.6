@@ -4,9 +4,13 @@
  *   amx_darcoins <nick> <monto>      da URU Coins (el nick puede ser parcial si está conectado)
  *   amx_quitarcoins <nick> <monto>   quita URU Coins (el saldo nunca queda negativo)
  *   amx_claudia_reload               recarga los JSON de configuración del servicio
+ *   amx_grupo <acción> ...           administra grupos (amx_grupo ayuda: crear, borrar, info, lista,
+ *                                    renombrar, tag, desc, privacidad, dueno, agregar, expulsar)
+ *   amx_crearg <dueño> <tag> <nombre>  atajo de amx_grupo crear
+ *   amx_borrarg <grupo>              atajo de amx_grupo borrar
  *
- * Requieren las flags de claudia_admin_flags (por defecto "l" = rcon). La consola del servidor
- * siempre puede usarlos.
+ * Requieren como mínimo el rol admin (claudia_admin_flags). Además el servicio verifica el permiso
+ * de cada acción según el rol (service/config/roles.json). La consola del servidor es owner.
  */
 
 #include <amxmodx>
@@ -27,6 +31,9 @@ public plugin_init()
 	register_concmd("amx_darcoins", "cmd_give", ADMIN_ALL, "<nick> <monto> - da URU Coins");
 	register_concmd("amx_quitarcoins", "cmd_take", ADMIN_ALL, "<nick> <monto> - quita URU Coins");
 	register_concmd("amx_claudia_reload", "cmd_reload", ADMIN_ALL, "- recarga la configuración de Claudia");
+	register_concmd("amx_grupo", "cmd_group", ADMIN_ALL, "<acción> ... - administra los grupos (amx_grupo ayuda)");
+	register_concmd("amx_crearg", "cmd_group_create", ADMIN_ALL, "<dueño> <tag> <nombre> - crea un grupo gratis");
+	register_concmd("amx_borrarg", "cmd_group_delete", ADMIN_ALL, "<grupo> - elimina un grupo");
 }
 
 public cmd_give(id)
@@ -67,6 +74,7 @@ coins(id, bool:give)
 	json_object_set_string(data, "target", target);
 	json_object_set_string(data, "amount", amount);
 	json_object_set_string(data, "mode", give ? "give" : "take");
+	json_object_set_number(data, "role", claudia_role(id));
 	if (!claudia_send("admin.coins", data, "cb_admin", id ? get_user_userid(id) : 0))
 	{
 		reply(id, "Claudia no está conectada al servicio.");
@@ -84,10 +92,79 @@ public cmd_reload(id)
 	{
 		return PLUGIN_HANDLED;
 	}
-	new JSON:data = Invalid_JSON;
+	new JSON:data = json_init_object();
+	new name[MAX_NAME_LENGTH];
+	if (id)
+	{
+		get_user_name(id, name, charsmax(name));
+	}
+	else
+	{
+		copy(name, charsmax(name), "consola");
+	}
+	json_object_set_string(data, "admin_name", name);
+	json_object_set_number(data, "role", claudia_role(id));
 	if (!claudia_send("admin.reload", data, "cb_admin", id ? get_user_userid(id) : 0))
 	{
 		reply(id, "Claudia no está conectada al servicio.");
+	}
+	return PLUGIN_HANDLED;
+}
+
+public cmd_group(id)
+{
+	return group(id, "");
+}
+
+public cmd_group_create(id)
+{
+	return group(id, "crear");
+}
+
+public cmd_group_delete(id)
+{
+	return group(id, "borrar");
+}
+
+/** Manda "<acción> <argumentos>" al servicio (la acción puede venir fija por el atajo). */
+group(id, const action[])
+{
+	if (!allowed(id))
+	{
+		return PLUGIN_HANDLED;
+	}
+	new args[192], full[224], name[MAX_NAME_LENGTH];
+	read_args(args, charsmax(args));
+	remove_quotes(args);
+	trim(args);
+	if (action[0])
+	{
+		formatex(full, charsmax(full), "%s %s", action, args);
+	}
+	else
+	{
+		copy(full, charsmax(full), args);
+	}
+	if (id)
+	{
+		get_user_name(id, name, charsmax(name));
+	}
+	else
+	{
+		copy(name, charsmax(name), "consola");
+	}
+	new JSON:data = json_init_object();
+	json_object_set_number(data, "slot", id);
+	json_object_set_string(data, "admin_name", name);
+	json_object_set_string(data, "args", full);
+	json_object_set_number(data, "role", claudia_role(id));
+	if (!claudia_send("admin.group", data, "cb_admin", id ? get_user_userid(id) : 0))
+	{
+		reply(id, "Claudia no está conectada al servicio.");
+	}
+	else
+	{
+		log_amx("[Claudia] %s: amx_grupo %s", name, full);
 	}
 	return PLUGIN_HANDLED;
 }
@@ -111,6 +188,18 @@ public cb_admin(bool:ok, JSON:data, const error[], const message[], userid)
 	new text[256];
 	json_object_get_string(data, "message", text, charsmax(text));
 	reply(id, text);
+	// Detalle opcional (ej. amx_grupo info / lista).
+	new JSON:lines = json_object_get_value(data, "lines");
+	if (lines != Invalid_JSON)
+	{
+		new count = json_array_get_count(lines);
+		for (new i = 0; i < count; i++)
+		{
+			json_array_get_string(lines, i, text, charsmax(text));
+			reply(id, text);
+		}
+		json_free(lines);
+	}
 }
 
 bool:allowed(id)
@@ -119,9 +208,7 @@ bool:allowed(id)
 	{
 		return true;
 	}
-	new flags[32];
-	get_cvar_string("claudia_admin_flags", flags, charsmax(flags));
-	if (!(get_user_flags(id) & read_flags(flags)))
+	if (claudia_role(id) < CLAUDIA_ROLE_ADMIN)
 	{
 		console_print(id, "No tenés acceso a este comando.");
 		return false;

@@ -7,6 +7,9 @@
  *   - avisar entradas/salidas/cambios de nick de los jugadores
  *   - mandar el chat global y de muertos (no el de equipo) para la IA
  *   - reenviar los comandos de chat de Claudia (/perfil, /ruleta, ...) y ocultarlos del chat
+ *   - mostrar el tag del grupo en el chat ([TAG]nick) y capturar las respuestas de los formularios por chat
+ *   - mostrar los menús de HUD que arma el servicio (/menu) y pedir textos con messagemode
+ *   - calcular el rol de cada jugador (jugador/admin/staff/owner) con las flags de AMXX
  *   - ejecutar los eventos del servicio: mensajes, sonidos para un jugador y ventanas MOTD
  *
  * Los demás plugins de Claudia usan la API de include/claudia.inc.
@@ -68,6 +71,7 @@ new g_Line[LINE_MAX];
 new g_Chunk[CHUNK_MAX];
 new g_Text[1024];
 new g_SayText[256];
+new g_ChatLine[192];
 
 new g_NextId;
 new g_PendId[MAX_PENDING];
@@ -79,6 +83,8 @@ new bool:g_Registered[MAX_PLAYERS + 1];
 new bool:g_Logged[MAX_PLAYERS + 1];
 new bool:g_Joined[MAX_PLAYERS + 1];
 new g_Name[MAX_PLAYERS + 1][MAX_NAME_LENGTH];
+new g_Tag[MAX_PLAYERS + 1][16];
+new bool:g_Capture[MAX_PLAYERS + 1];
 
 new Trie:g_Commands;
 
@@ -87,6 +93,13 @@ new g_Port;
 new g_Secret[128];
 new g_StaffFlags[32];
 new g_AdminFlags[32];
+new g_OwnerFlags[32];
+
+// Menú de HUD abierto por jugador: handle de AMXX e id del servicio.
+new g_Menu[MAX_PLAYERS + 1] = { -1, ... };
+new g_MenuId[MAX_PLAYERS + 1];
+new g_MenuTitle[512];
+new g_MenuItem[128];
 
 new g_fwdConnection;
 new g_fwdAuthChanged;
@@ -101,6 +114,7 @@ public plugin_natives()
 	register_native("claudia_send", "native_send");
 	register_native("claudia_is_logged", "native_is_logged");
 	register_native("claudia_is_registered", "native_is_registered");
+	register_native("claudia_role", "native_role");
 }
 
 public plugin_precache()
@@ -138,11 +152,14 @@ public plugin_init()
 	bind_pcvar_string(create_cvar("claudia_host", "127.0.0.1", FCVAR_PROTECTED, "IP del servicio de Claudia"), g_Host, charsmax(g_Host));
 	bind_pcvar_num(create_cvar("claudia_port", "27100", FCVAR_PROTECTED, "Puerto TCP del servicio de Claudia"), g_Port);
 	bind_pcvar_string(create_cvar("claudia_secret", "CAMBIAR-ESTE-SECRETO", FCVAR_PROTECTED, "Secreto compartido con el servicio"), g_Secret, charsmax(g_Secret));
-	bind_pcvar_string(create_cvar("claudia_staff_flags", "l", _, "Flags de owner/staff: ven el perfil completo de cualquiera"), g_StaffFlags, charsmax(g_StaffFlags));
-	bind_pcvar_string(create_cvar("claudia_admin_flags", "l", _, "Flags para los comandos de admin de Claudia"), g_AdminFlags, charsmax(g_AdminFlags));
+	bind_pcvar_string(create_cvar("claudia_admin_flags", "d", _, "Flags del rol admin (alcanza con una)"), g_AdminFlags, charsmax(g_AdminFlags));
+	bind_pcvar_string(create_cvar("claudia_staff_flags", "m", _, "Flags del rol staff (alcanza con una)"), g_StaffFlags, charsmax(g_StaffFlags));
+	bind_pcvar_string(create_cvar("claudia_owner_flags", "l", _, "Flags del rol owner (alcanza con una)"), g_OwnerFlags, charsmax(g_OwnerFlags));
 
 	register_clcmd("say", "cmd_say");
 	register_clcmd("say_team", "cmd_say_team");
+	register_clcmd("claudia_menu", "cmd_menu", _, "- abre el menú de Claudia (bindealo a una tecla)");
+	register_clcmd("claudia_input", "cmd_input");
 	register_srvcmd("claudia_status", "cmd_status");
 
 	g_Commands = TrieCreate();
@@ -226,6 +243,7 @@ disconnect_service(const reason[])
 	for (new i = 1; i <= MAX_PLAYERS; i++)
 	{
 		g_Joined[i] = false;
+		g_Capture[i] = false;
 	}
 	if (wasReady)
 	{
@@ -547,6 +565,7 @@ send_join(id)
 	json_object_set_string(data, "ip", ip);
 	json_object_set_string(data, "authid", authid);
 	json_object_set_bool(data, "was_logged", g_Logged[id]);
+	json_object_set_number(data, "role", get_role(id));
 	if (send_message("player.join", data, KIND_JOIN, -1, id) >= 0)
 	{
 		g_Joined[id] = true;
@@ -561,6 +580,11 @@ set_auth_state(id, bool:registered, bool:logged)
 	}
 	g_Registered[id] = registered;
 	g_Logged[id] = logged;
+	if (!logged)
+	{
+		g_Tag[id][0] = EOS;
+		g_Capture[id] = false;
+	}
 	ExecuteForward(g_fwdAuthChanged, _, id, registered, logged);
 }
 
@@ -664,6 +688,48 @@ handle_event(const type[], JSON:data)
 			show_motd(id, g_Text, title);
 		}
 	}
+	else if (equal(type, "chat.tag"))
+	{
+		new id = json_object_get_number(data, "slot");
+		if (1 <= id <= MAX_PLAYERS)
+		{
+			json_object_get_string(data, "tag", g_Tag[id], charsmax(g_Tag[]));
+			strip_colors(g_Tag[id]);
+		}
+	}
+	else if (equal(type, "input.capture"))
+	{
+		new id = json_object_get_number(data, "slot");
+		if (1 <= id <= MAX_PLAYERS)
+		{
+			g_Capture[id] = json_object_get_bool(data, "on");
+		}
+	}
+	else if (equal(type, "menu"))
+	{
+		show_service_menu(data);
+	}
+	else if (equal(type, "prompt"))
+	{
+		new id = json_object_get_number(data, "slot");
+		json_object_get_string(data, "label", g_Text, charsmax(g_Text));
+		if (is_valid_target(id))
+		{
+			client_print_color(id, print_team_default, "%s", g_Text);
+			client_cmd(id, "messagemode claudia_input");
+		}
+	}
+	else if (equal(type, "exec"))
+	{
+		// Solo comandos de una lista blanca: el servicio no puede ejecutar cualquier cosa en el cliente.
+		new id = json_object_get_number(data, "slot");
+		new cmd[32];
+		json_object_get_string(data, "cmd", cmd, charsmax(cmd));
+		if (is_valid_target(id) && equal(cmd, "amxmodmenu"))
+		{
+			client_cmd(id, "amxmodmenu");
+		}
+	}
 	else if (equal(type, "auth.state"))
 	{
 		set_auth_state(json_object_get_number(data, "slot"), json_object_get_bool(data, "registered"), json_object_get_bool(data, "logged"));
@@ -737,6 +803,8 @@ public client_putinserver(id)
 	g_Registered[id] = false;
 	g_Logged[id] = false;
 	g_Joined[id] = false;
+	g_Tag[id][0] = EOS;
+	g_Capture[id] = false;
 	if (is_user_bot(id) || is_user_hltv(id))
 	{
 		return;
@@ -761,6 +829,9 @@ public client_disconnected(id)
 	g_Registered[id] = false;
 	g_Logged[id] = false;
 	g_Name[id][0] = EOS;
+	g_Tag[id][0] = EOS;
+	g_Capture[id] = false;
+	g_Menu[id] = -1;
 }
 
 public client_infochanged(id)
@@ -842,17 +913,20 @@ handle_say(id, bool:team)
 				client_print_color(id, print_team_default, "%s %L", CLAUDIA_TAG, id, "CLAUDIA_OFFLINE");
 				return PLUGIN_HANDLED;
 			}
-			new flags = get_user_flags(id);
-			new JSON:data = json_init_object();
-			json_object_set_number(data, "slot", id);
-			json_object_set_string(data, "name", cmd);
-			json_object_set_string(data, "args", args);
-			json_object_set_bool(data, "staff", (flags & read_flags(g_StaffFlags)) != 0);
-			json_object_set_bool(data, "admin", (flags & read_flags(g_AdminFlags)) != 0);
-			send_message("cmd", data, KIND_FREE);
+			send_command(id, cmd, args);
 			return PLUGIN_HANDLED;
 		}
 		return PLUGIN_CONTINUE;
+	}
+
+	// Formulario por chat (ej. crear un grupo): la respuesta va al servicio y no se muestra.
+	if (g_Capture[id] && g_State == STATE_READY && g_Joined[id])
+	{
+		new JSON:data = json_init_object();
+		json_object_set_number(data, "slot", id);
+		json_object_set_string(data, "text", g_SayText);
+		send_message("input", data, KIND_FREE);
+		return PLUGIN_HANDLED;
 	}
 
 	// Chat global y de muertos: contexto para la IA. El chat de equipo no se manda.
@@ -864,7 +938,229 @@ handle_say(id, bool:team)
 		json_object_set_bool(data, "dead", !is_user_alive(id));
 		send_message("chat", data, KIND_FREE);
 	}
+
+	// Miembro de un grupo: el mensaje se imprime acá con el tag ([TAG]nick) en lugar del chat normal.
+	if (g_Tag[id][0])
+	{
+		print_tagged(id, team, g_SayText);
+		return PLUGIN_HANDLED;
+	}
 	return PLUGIN_CONTINUE;
+}
+
+/**
+ * Imprime un mensaje de chat con el tag del grupo respetando las reglas del CS:
+ * los muertos solo le hablan a los muertos y el chat de equipo solo le llega al equipo.
+ */
+print_tagged(id, bool:team, const text[])
+{
+	new msg[192];
+	copy(msg, charsmax(msg), text);
+	strip_colors(msg);
+
+	new senderTeam = get_user_team(id);
+	new bool:alive = bool:is_user_alive(id);
+	new prefix[40];
+	if (senderTeam != 1 && senderTeam != 2)
+	{
+		copy(prefix, charsmax(prefix), "*SPEC* ");
+	}
+	else if (!alive)
+	{
+		copy(prefix, charsmax(prefix), "*MUERTO* ");
+	}
+	if (team)
+	{
+		add(prefix, charsmax(prefix), senderTeam == 1 ? "(Terrorista) " : (senderTeam == 2 ? "(Anti-Terrorista) " : "(Espectador) "));
+	}
+	formatex(g_ChatLine, charsmax(g_ChatLine), "^1%s^4[%s]^3%s^1 :  %s", prefix, g_Tag[id], g_Name[id], msg);
+
+	new bool:alltalk = get_cvar_num("sv_alltalk") != 0;
+	new players[MAX_PLAYERS], num;
+	get_players(players, num, "ch");
+	for (new i = 0; i < num; i++)
+	{
+		new to = players[i];
+		if (team && get_user_team(to) != senderTeam)
+		{
+			continue;
+		}
+		if (!alive && !alltalk && is_user_alive(to))
+		{
+			continue;
+		}
+		client_print_color(to, id, "%s", g_ChatLine);
+	}
+
+	// Mismo formato que el log del motor, para que no se pierda en los logs/estadísticas.
+	new authid[64], teamName[32];
+	get_user_authid(id, authid, charsmax(authid));
+	get_user_team(id, teamName, charsmax(teamName));
+	log_message("^"%s<%d><%s><%s>^" %s ^"%s^"", g_Name[id], get_user_userid(id), authid, teamName, team ? "say_team" : "say", msg);
+}
+
+/** Quita los códigos de color del chat (bytes 1 a 4) para que no se puedan inyectar. */
+strip_colors(text[])
+{
+	for (new i = 0; text[i] != EOS; i++)
+	{
+		if (text[i] >= 1 && text[i] <= 4)
+		{
+			text[i] = ' ';
+		}
+	}
+}
+
+/* =========================================================================
+ * Roles, comandos y menús
+ * ========================================================================= */
+
+/** Rol según las flags: 0 jugador, 1 admin, 2 staff, 3 owner. La consola (id 0) es owner. */
+get_role(id)
+{
+	if (id == 0)
+	{
+		return 3;
+	}
+	if (!is_user_connected(id))
+	{
+		return 0;
+	}
+	new flags = get_user_flags(id);
+	if (g_OwnerFlags[0] && (flags & read_flags(g_OwnerFlags)))
+	{
+		return 3;
+	}
+	if (g_StaffFlags[0] && (flags & read_flags(g_StaffFlags)))
+	{
+		return 2;
+	}
+	if (g_AdminFlags[0] && (flags & read_flags(g_AdminFlags)))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+/** Datos comunes de los mensajes de un jugador: slot y rol (staff/admin quedan por compatibilidad). */
+JSON:player_data(id)
+{
+	new JSON:data = json_init_object();
+	new role = get_role(id);
+	json_object_set_number(data, "slot", id);
+	json_object_set_number(data, "role", role);
+	json_object_set_bool(data, "staff", role >= 2);
+	json_object_set_bool(data, "admin", role >= 1);
+	return data;
+}
+
+send_command(id, const cmd[], const args[])
+{
+	new JSON:data = player_data(id);
+	json_object_set_string(data, "name", cmd);
+	json_object_set_string(data, "args", args);
+	send_message("cmd", data, KIND_FREE);
+}
+
+/** claudia_menu: para bindear una tecla, ej. bind "F3" "claudia_menu". */
+public cmd_menu(id)
+{
+	if (g_State != STATE_READY || !g_Joined[id])
+	{
+		client_print_color(id, print_team_default, "%s %L", CLAUDIA_TAG, id, "CLAUDIA_OFFLINE");
+		return PLUGIN_HANDLED;
+	}
+	send_command(id, "menu", "");
+	return PLUGIN_HANDLED;
+}
+
+/** Respuesta a un texto pedido por el menú (messagemode claudia_input). */
+public cmd_input(id)
+{
+	if (g_State != STATE_READY || !g_Joined[id])
+	{
+		return PLUGIN_HANDLED;
+	}
+	read_args(g_SayText, charsmax(g_SayText));
+	remove_quotes(g_SayText);
+	trim(g_SayText);
+	new JSON:data = player_data(id);
+	json_object_set_string(data, "text", g_SayText);
+	send_message("menu.input", data, KIND_FREE);
+	return PLUGIN_HANDLED;
+}
+
+/** Muestra un menú armado por el servicio: {slot, id, title, items[], page}. */
+show_service_menu(JSON:data)
+{
+	new id = json_object_get_number(data, "slot");
+	if (!is_valid_target(id))
+	{
+		return;
+	}
+	json_object_get_string(data, "title", g_MenuTitle, charsmax(g_MenuTitle));
+	new JSON:items = json_object_get_value(data, "items");
+	if (items == Invalid_JSON)
+	{
+		return;
+	}
+	new menu = menu_create(g_MenuTitle, "menu_handler");
+	new count = json_array_get_count(items);
+	new info[8];
+	for (new i = 0; i < count; i++)
+	{
+		json_array_get_string(items, i, g_MenuItem, charsmax(g_MenuItem));
+		num_to_str(i, info, charsmax(info));
+		menu_additem(menu, g_MenuItem, info);
+	}
+	json_free(items);
+
+	// Hasta 9 opciones entran en una sola página con "0. Salir"; si hay más, se pagina de a 7.
+	if (count <= 9)
+	{
+		menu_setprop(menu, MPROP_PERPAGE, 0);
+		menu_setprop(menu, MPROP_EXIT, MEXIT_FORCE);
+	}
+	menu_setprop(menu, MPROP_BACKNAME, "Anterior");
+	menu_setprop(menu, MPROP_NEXTNAME, "Siguiente");
+	menu_setprop(menu, MPROP_EXITNAME, "Salir");
+
+	// Si tenía otro abierto, su handler recibe MENU_EXIT y lo destruye (ya no es el actual).
+	g_Menu[id] = menu;
+	g_MenuId[id] = json_object_get_number(data, "id");
+	new page = json_object_get_number(data, "page");
+	menu_display(id, menu, (page > 0 && count > 9) ? page : 0);
+}
+
+public menu_handler(id, menu, item)
+{
+	new bool:current = (g_Menu[id] == menu);
+	new page = 0;
+	if (current)
+	{
+		new oldMenu, newMenu;
+		player_menu_info(id, oldMenu, newMenu, page);
+		g_Menu[id] = -1;
+	}
+	if (current && is_user_connected(id) && g_State == STATE_READY)
+	{
+		new JSON:data = player_data(id);
+		json_object_set_number(data, "menu", g_MenuId[id]);
+		if (item >= 0)
+		{
+			new info[8], access, callback;
+			menu_item_getinfo(menu, item, access, info, charsmax(info), _, _, callback);
+			json_object_set_number(data, "item", str_to_num(info));
+			json_object_set_number(data, "page", page);
+			send_message("menu.select", data, KIND_FREE);
+		}
+		else
+		{
+			send_message("menu.close", data, KIND_FREE);
+		}
+	}
+	menu_destroy(menu);
+	return PLUGIN_HANDLED;
 }
 
 public cmd_status()
@@ -908,6 +1204,11 @@ public bool:native_is_logged(plugin, argc)
 {
 	new id = get_param(1);
 	return (1 <= id <= MAX_PLAYERS) && g_Logged[id];
+}
+
+public native_role(plugin, argc)
+{
+	return get_role(get_param(1));
 }
 
 public bool:native_is_registered(plugin, argc)

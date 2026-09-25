@@ -1,0 +1,32 @@
+/* Dulce de Leche Bonanza: tonos caramelo y rosa */
+.stage {
+    background: #c96a8e;
+    background: -webkit-radial-gradient(50% 30%, ellipse, #ffc7dc 0%, #e07aa2 45%, #7a2d5c 100%);
+    background: radial-gradient(ellipse at 50% 30%, #ffc7dc 0%, #e07aa2 45%, #7a2d5c 100%);
+}
+
+.stage.fs {
+    background: #5a2a7a;
+    background: -webkit-radial-gradient(50% 30%, ellipse, #c9a0ff 0%, #7a3ab0 50%, #2d0f4a 100%);
+    background: radial-gradient(ellipse at 50% 30%, #c9a0ff 0%, #7a3ab0 50%, #2d0f4a 100%);
+}
+
+.topbar .title {
+    color: #fff3d6;
+    text-shadow: 0 2px 0 #8a3a1a;
+}
+
+.hint {
+    font-size: 11px;
+    color: #ffe6f0;
+}
+
+.board {
+    background: rgba(255, 240, 248, 0.25);
+    box-shadow: 0 0 0 3px #fff3d6, 0 0 0 6px #b35a86, 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.panel.info {
+    font-size: 11px;
+    color: #fff;
+}

@@ -6,7 +6,7 @@ namespace Claudia\Commands;
 
 use Claudia\App;
 use Claudia\Clock;
-use Claudia\Log;
+use Claudia\Players\Role;
 use Claudia\UserError;
 use Claudia\Util\Text;
 
@@ -155,21 +155,12 @@ final class EconomyCommands
     }
 
     /** Comandos de administración (vienen de amx_darcoins / amx_quitarcoins, no del chat). */
-    public static function adminCoins(App $app, int $adminSlot, string $adminName, string $target, string $amountRaw, bool $give): string
+    public static function adminCoins(App $app, int $adminSlot, string $adminName, string $target, string $amountRaw, bool $give, int $role = Role::OWNER): string
     {
         $amount = Text::parseAmount($amountRaw);
         if ($amount === null) {
             throw new UserError('Monto inválido.');
         }
-        $user = $app->findUser($target);
-        [$balance, $applied] = $app->wallet->adminAdjust((int) $user['id'], $give ? $amount : -$amount, "admin {$adminName}");
-        Log::info('Admin coins', ['admin' => $adminName, 'target' => $user['nick'], 'delta' => $applied]);
-        $to = $app->sessions->byUser((int) $user['id']);
-        if ($to !== null) {
-            $app->out->chat($to->slot, $give
-                ? "Un admin te dio {green}" . Text::coins($applied) . '{default} URU Coins.'
-                : 'Un admin te sacó {green}' . Text::coins(-$applied) . '{default} URU Coins.');
-        }
-        return ($give ? 'Diste ' : 'Quitaste ') . Text::coins(abs($applied)) . " URU Coins a {$user['nick']}. Saldo: " . Text::coins($balance) . '.';
+        return $app->admin->coins($role, $adminName, $app->findUser($target), $amount, $give);
     }
 }

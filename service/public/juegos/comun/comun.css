@@ -1,5 +1,10 @@
-/* Claudia - estilos comunes de los juegos (pensados para la ventana MOTD, ~640x480) */
+/*
+ * Claudia - estilos comunes de los juegos (ventana MOTD, escenario 640x440).
+ * El MOTD de CS 1.6 usa un Chromium viejo SIN flexbox: todo el layout usa inline-block,
+ * line-height y posicionamiento absoluto.
+ */
 * {
+    -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
 
@@ -29,6 +34,7 @@ button {
     padding: 5px 10px;
     cursor: pointer;
     text-shadow: 0 1px 0 #000;
+    vertical-align: middle;
 }
 
 button:hover {
@@ -48,15 +54,26 @@ button.primary {
     padding: 6px 16px;
 }
 
+/* Barra superior: los hijos van en línea, centrados verticalmente con un "puntal". */
 .topbar {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
+    position: relative;
     height: 42px;
     padding: 0 10px;
+    white-space: nowrap;
     background: rgba(0, 0, 0, 0.55);
     border-bottom: 1px solid #c9a24a;
+}
+
+.topbar:before {
+    content: '';
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+}
+
+.topbar > * {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .topbar .title {
@@ -80,32 +97,48 @@ button.primary {
 }
 
 .stat b {
+    display: block;
     font-size: 15px;
     color: #fff;
 }
 
+/* Lo que va a la derecha de una barra. */
 .spacer {
-    -webkit-flex: 1;
-    flex: 1;
+    display: none;
+}
+
+.topbar .chips,
+.topbar .hint {
+    position: absolute;
+    right: 10px;
+    top: 4px;
+}
+
+.topbar .hint {
+    top: 14px;
+}
+
+.rgroup {
+    position: absolute;
+    right: 10px;
+    white-space: nowrap;
 }
 
 .chips {
-    display: -webkit-flex;
-    display: flex;
+    white-space: nowrap;
+    font-size: 0;
 }
 
 .chip {
+    display: inline-block;
+    vertical-align: middle;
     width: 34px;
     height: 34px;
+    line-height: 28px;
+    text-align: center;
     border-radius: 50%;
     margin-left: 4px;
     border: 3px dashed rgba(255, 255, 255, 0.85);
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     font-size: 10px;
     font-weight: bold;
     color: #fff;
@@ -131,8 +164,8 @@ button.primary {
     position: absolute;
     left: 50%;
     bottom: 58px;
-    -webkit-transform: translateX(-50%);
-    transform: translateX(-50%);
+    width: 420px;
+    margin-left: -210px;
     background: rgba(0, 0, 0, 0.85);
     border: 1px solid #c9a24a;
     border-radius: 6px;
@@ -142,7 +175,6 @@ button.primary {
     transition: opacity 0.3s;
     pointer-events: none;
     z-index: 50;
-    max-width: 90%;
     text-align: center;
 }
 
@@ -169,16 +201,11 @@ button.primary {
     bottom: 0;
     background: rgba(0, 0, 0, 0.8);
     z-index: 100;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
     font-size: 16px;
     text-align: center;
-    padding: 30px;
+    padding: 160px 40px 0;
 }
 
 .overlay.show {
-    display: -webkit-flex;
-    display: flex;
+    display: block;
 }

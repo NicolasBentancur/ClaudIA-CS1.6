@@ -1,0 +1,28 @@
+{
+    "_comentario": "Grupos (clanes). El precio se cobra al terminar el formulario de creación (se compra en /tienda o con /creargrupo). El fondo común se llena con cuotas y donaciones de los miembros: nunca se crean coins nuevas.",
+
+    "price": 10000,
+    "max_members": 16,
+
+    "name_min_length": 3,
+    "name_max_length": 24,
+    "tag_max_length": 6,
+    "description_max_length": 100,
+    "_comentario_tag": "Caracteres permitidos en el tag, además de letras y números.",
+    "tag_extra_chars": "-_.!*#$@+",
+
+    "flow_timeout_seconds": 120,
+    "dissolve_confirm_seconds": 30,
+
+    "fee": {
+        "_comentario": "Cuota de participación: cada 'rounds' rondas jugadas, cada miembro (menos el dueño) pone 'amount' coins en el fondo.",
+        "amount": 25,
+        "rounds": 100
+    },
+
+    "tax": {
+        "_comentario": "Impuesto al fondo: cada 'rounds' rondas que juega el dueño se quema el 'rate' del fondo (sale de circulación).",
+        "rate": 0.15,
+        "rounds": 300
+    }
+}

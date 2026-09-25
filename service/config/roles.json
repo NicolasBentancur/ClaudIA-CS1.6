@@ -1,0 +1,36 @@
+{
+    "_comentario": "Rol mínimo para cada acción de administración: jugador < admin < staff < owner (cada rol tiene todo lo del anterior). El rol sale de las flags de AMXX: claudia_admin_flags, claudia_staff_flags y claudia_owner_flags en claudia.cfg. La consola del servidor es owner.",
+
+    "permissions": {
+        "admin.menu": "admin",
+        "admin.amxmenu": "admin",
+        "announce": "admin",
+        "players.profile": "admin",
+        "players.nickname": "admin",
+        "groups.view": "admin",
+        "groups.edit": "admin",
+        "groups.members": "admin",
+
+        "players.profile_full": "staff",
+        "players.memory": "staff",
+        "groups.create": "staff",
+        "groups.delete": "staff",
+        "groups.owner": "staff",
+        "coins.give": "staff",
+        "coins.take": "staff",
+        "ai.toggle": "staff",
+
+        "players.password": "owner",
+        "loans.forgive": "owner",
+        "promos.force": "owner",
+        "config.reload": "owner",
+        "service.status": "owner"
+    },
+
+    "_comentario_limites": "Tope de coins por cada operación de dar/quitar (0 = sin tope).",
+    "coin_limits": {
+        "admin": 5000,
+        "staff": 10000,
+        "owner": 0
+    }
+}

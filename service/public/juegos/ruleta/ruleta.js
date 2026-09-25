@@ -44,10 +44,11 @@
         waitingStart: false,
         vecinosMode: false,
         frames: [],
-        lastReceived: false,
-        startAt: null,
-        fi: 0,
+        spinAt: 0,
+        buffer: 250,
         animating: false,
+        animSeq: 0,
+        animTimer: null,
         pendingResult: null,
         scale: 1
     };
@@ -84,6 +85,7 @@
         var t = 'translate(' + left + 'px,' + top + 'px) scale(' + s + ')';
         stage.style.webkitTransform = t;
         stage.style.transform = t;
+        prepareWheel();
     }
 
     /* ---------------------------------------------------------------------
@@ -510,51 +512,192 @@
     /* ---------------------------------------------------------------------
      * Animación
      * ------------------------------------------------------------------- */
-    function draw(w, b, r) {
-        var wt = 'rotate(' + w + 'deg)';
-        var wheel = $('wheel');
-        wheel.style.webkitTransform = wt;
-        wheel.style.transform = wt;
-        var pt = 'rotate(' + b + 'deg)';
-        var arm = $('pointerArm');
-        arm.style.webkitTransform = pt;
-        arm.style.transform = pt;
-        var rad = b * Math.PI / 180;
-        var R = r * TRACK;
-        var ball = $('ball');
-        ball.style.left = (WHEEL_HALF + R * Math.sin(rad)) + 'px';
-        ball.style.top = (WHEEL_HALF - R * Math.cos(rad)) + 'px';
+    /*
+     * La ruleta se pinta UNA vez en un canvas y el giro se hace con animaciones CSS, igual que los
+     * slots y el blackjack: la trayectoria que calcula el servidor se convierte en @keyframes y el
+     * navegador la reproduce solo. En el Chrome 18 del MOTD, requestAnimationFrame no está limitado
+     * (dispara cientos de veces por segundo) y animar cuadro a cuadro desde JS lo traba.
+     */
+    /*
+     * Dibuja la ruleta con primitivas de canvas (misma geometría que tools/gen_wheel.php, radio 100).
+     * No se usa el SVG: el Chrome 18 del MOTD no lo dibuja dentro de un canvas.
+     * El casillero i de ORDER está centrado en i * 360/37 grados, en sentido horario desde arriba.
+     */
+    var ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+
+    function paintWheel(ctx, u) {
+        var D = Math.PI / 180;
+        var step = 360 / 37;
+        ctx.save();
+        ctx.translate(100 * u, 100 * u);
+        ctx.scale(u, u);
+
+        function circle(r, fill, stroke, width) {
+            ctx.beginPath();
+            ctx.arc(0, 0, r, 0, Math.PI * 2, false);
+            if (fill) {
+                ctx.fillStyle = fill;
+                ctx.fill();
+            }
+            if (stroke) {
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = width;
+                ctx.stroke();
+            }
+        }
+
+        function wedge(a0, a1, r0, r1, fill) {
+            ctx.beginPath();
+            ctx.arc(0, 0, r1, (a0 - 90) * D, (a1 - 90) * D, false);
+            ctx.arc(0, 0, r0, (a1 - 90) * D, (a0 - 90) * D, true);
+            ctx.closePath();
+            ctx.fillStyle = fill;
+            ctx.fill();
+        }
+
+        var wood = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+        wood.addColorStop(0.86, '#6b3a1a');
+        wood.addColorStop(0.93, '#8a4f25');
+        wood.addColorStop(1, '#3d1f0c');
+        var gold = ctx.createLinearGradient(-100, -100, 100, 100);
+        gold.addColorStop(0, '#fff2b0');
+        gold.addColorStop(0.5, '#d4a437');
+        gold.addColorStop(1, '#8a6414');
+        var cone = ctx.createRadialGradient(0, 0, 0, 0, 0, 50);
+        cone.addColorStop(0, '#c9a24a');
+        cone.addColorStop(0.25, '#8a5a2b');
+        cone.addColorStop(1, '#4a2710');
+
+        circle(100, wood);
+        circle(93, null, 'rgba(42,20,5,0.6)', 1.2);
+        circle(88, '#1a1a1a');
+
+        for (var i = 0; i < ORDER.length; i++) {
+            var n = ORDER[i];
+            var isRed = red.indexOf(n) !== -1;
+            var a0 = (i - 0.5) * step;
+            var a1 = (i + 0.5) * step;
+            // +0.15° para que no queden rayitas entre casilleros por el antialias.
+            wedge(a0, a1 + 0.15, 72, 88, n === 0 ? '#0e7a3b' : (isRed ? '#b3202a' : '#161616'));
+            wedge(a0, a1 + 0.15, 50, 72, n === 0 ? '#0a5a2b' : (isRed ? '#8c1820' : '#0c0c0c'));
+
+            ctx.save();
+            ctx.rotate(i * step * D);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 8px Georgia, serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(n), 0, -80);
+            ctx.restore();
+
+            // Separadores (trastes) de los casilleros.
+            ctx.beginPath();
+            ctx.moveTo(50 * Math.sin(a0 * D), -50 * Math.cos(a0 * D));
+            ctx.lineTo(88 * Math.sin(a0 * D), -88 * Math.cos(a0 * D));
+            ctx.strokeStyle = gold;
+            ctx.lineWidth = 0.9;
+            ctx.stroke();
+        }
+
+        circle(88, null, gold, 1.2);
+        circle(72, null, gold, 0.8);
+        circle(50, cone, gold, 1.2);
+
+        // Torreta central.
+        ctx.fillStyle = gold;
+        ctx.fillRect(-2, -30, 4, 60);
+        ctx.fillRect(-30, -2, 60, 4);
+        var knobs = [[0, -30], [0, 30], [-30, 0], [30, 0]];
+        for (var j = 0; j < knobs.length; j++) {
+            ctx.beginPath();
+            ctx.arc(knobs[j][0], knobs[j][1], 4, 0, Math.PI * 2, false);
+            ctx.fill();
+        }
+        circle(9, gold, '#6b4a0e', 0.4);
+        circle(4, '#fff2b0');
+        ctx.restore();
     }
 
-    function tick() {
-        if (!S.animating) {
-            return;
+    function prepareWheel() {
+        var cv = $('wheelCanvas');
+        var k = S.scale * (window.devicePixelRatio || 1);
+        cv.width = Math.ceil(WHEEL_HALF * 2 * k);
+        cv.height = cv.width;
+        paintWheel(cv.getContext('2d'), WHEEL_HALF * k / 100);
+    }
+
+    function setT(el, t) {
+        el.style.webkitTransform = t;
+        el.style.transform = t;
+    }
+
+    function setAnim(el, a) {
+        el.style.webkitAnimation = a;
+        el.style.animation = a;
+    }
+
+    var ANIMATED = ['wheelCanvas', 'pointerArm', 'ballArm', 'ball'];
+
+    /** Posición fija: rueda a "w" grados, bola a "b" grados y radio "r" (1 = pista). */
+    function pose(w, b, r) {
+        setT($('wheelCanvas'), 'rotate(' + w + 'deg)');
+        setT($('pointerArm'), 'rotate(' + b + 'deg)');
+        setT($('ballArm'), 'rotate(' + b + 'deg)');
+        setT($('ball'), 'translateY(' + (-r * TRACK) + 'px)');
+    }
+
+    function keyframes(name, frames, T, fn) {
+        var body = '';
+        var std = '';
+        for (var i = 0; i < frames.length; i++) {
+            var p = (frames[i][0] / T * 100).toFixed(3) + '%';
+            var t = fn(frames[i]);
+            body += p + '{-webkit-transform:' + t + '}';
+            std += p + '{transform:' + t + '}';
         }
-        var f = S.frames;
-        if (!f.length) {
-            C.raf(tick);
-            return;
-        }
-        var t = C.now() - S.startAt;
-        while (S.fi + 1 < f.length && f[S.fi + 1][0] <= t) {
-            S.fi++;
-        }
-        var a = f[S.fi];
-        var b = f[S.fi + 1];
-        if (!b || t <= a[0]) {
-            draw(a[1], a[2], a[3]);
-        } else {
-            var k = (t - a[0]) / (b[0] - a[0]);
-            draw(a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k, a[3] + (b[3] - a[3]) * k);
-        }
-        if (S.lastReceived && S.fi === f.length - 1 && t >= f[f.length - 1][0]) {
+        return '@-webkit-keyframes ' + name + '{' + body + '}\n@keyframes ' + name + '{' + std + '}\n';
+    }
+
+    /** Reproduce la trayectoria completa [[ms, rueda, bola, radio], ...] tras "delay" ms. */
+    function play(frames, delay) {
+        var T = Math.max(1, frames[frames.length - 1][0]);
+        S.animSeq++;
+        var id = S.animSeq;
+        var css = keyframes('rw' + id, frames, T, function (f) { return 'rotate(' + f[1].toFixed(2) + 'deg)'; }) +
+            keyframes('rb' + id, frames, T, function (f) { return 'rotate(' + f[2].toFixed(2) + 'deg)'; }) +
+            keyframes('rr' + id, frames, T, function (f) { return 'translateY(' + (-f[3] * TRACK).toFixed(2) + 'px)'; });
+        $('spinAnim').textContent = css;
+
+        // Al terminar queda en la última posición (también es la base si la animación no corre).
+        var last = frames[frames.length - 1];
+        pose(last[1], last[2], last[3]);
+        var opts = ' ' + T + 'ms linear ' + Math.round(delay) + 'ms both';
+        setAnim($('wheelCanvas'), 'rw' + id + opts);
+        setAnim($('pointerArm'), 'rb' + id + opts);
+        setAnim($('ballArm'), 'rb' + id + opts);
+        setAnim($('ball'), 'rr' + id + opts);
+
+        S.animating = true;
+        S.animTimer = window.setTimeout(function () {
+            if (id !== S.animSeq) {
+                return;
+            }
             S.animating = false;
             if (S.pendingResult) {
                 showResult(S.pendingResult);
             }
-            return;
+        }, T + delay + 60);
+    }
+
+    /** Corta cualquier animación y deja la ruleta quieta en la posición dada. */
+    function stopAnim(w, b, r) {
+        S.animSeq++;
+        window.clearTimeout(S.animTimer);
+        S.animating = false;
+        for (var i = 0; i < ANIMATED.length; i++) {
+            setAnim($(ANIMATED[i]), 'none');
         }
-        C.raf(tick);
+        pose(w, b, r);
     }
 
     function showResult(res) {
@@ -612,10 +755,11 @@
                 S.max = m.max;
                 if (m.red) {
                     red = m.red;
+                    prepareWheel();
                 }
                 renderHistory(m.history || []);
                 if (!S.animating) {
-                    draw(m.wheel, 0, 1);
+                    stopAnim(m.wheel, 0, 1);
                 }
                 S.busy = !!m.busy;
                 renderChips();
@@ -628,11 +772,10 @@
                 S.waitingStart = false;
                 S.balance = m.balance;
                 S.frames = [];
-                S.fi = 0;
-                S.lastReceived = false;
-                S.startAt = null;
+                S.spinAt = C.now();
                 S.buffer = (m.buffer || 0.25) * 1000;
                 S.pendingResult = null;
+                S.animating = true;
                 $('ball').style.visibility = 'visible';
                 setResult(null, 'No va más...', false);
                 status('');
@@ -642,13 +785,9 @@
                 for (var i = 0; i < m.f.length; i++) {
                     S.frames.push(m.f[i]);
                 }
-                if (m.last) {
-                    S.lastReceived = true;
-                }
-                if (S.startAt === null) {
-                    S.startAt = C.now() + S.buffer;
-                    S.animating = true;
-                    C.raf(tick);
+                if (m.last && S.frames.length) {
+                    // Arranca a los "buffer" ms del spin_start, en sincronía con los sonidos del servidor.
+                    play(S.frames, Math.max(0, S.buffer - (C.now() - S.spinAt)));
                 }
                 break;
             case 'result':

@@ -109,7 +109,12 @@ final class GeneralCommands
             $debt = $app->loans->totalDebt($uid);
             $line .= ' | Deuda: ' . Text::coins($debt) . ($app->loans->inClearing($uid) ? ' {team}[CLEARING]{default}' : '');
         }
-        $c->reply($line . ' | Grupo: - | Familia: -');
+        $group = $app->groups->ofUser($uid);
+        $rel = $app->family->relationship($uid);
+        $surname = $app->family->surnameOf($uid);
+        $c->reply($line . ' | Grupo: ' . ($group === null ? '-' : "[{$group['tag']}] {$group['name']}")
+            . ' | Pareja: ' . ($rel === null ? '-' : $app->nick((int) $rel['partner']) . ($rel['status'] === 'casados' ? ' (casados)' : ''))
+            . ' | Familia: ' . ($surname ?? '-'));
     }
 
     /** @param array<string,mixed> $user */

@@ -11,6 +11,34 @@
         return m ? decodeURIComponent(m[1]) : '';
     }
 
+    /*
+     * Errores de JS -> log del servicio. El MOTD del juego es un Chrome 18 sin consola a mano:
+     * es la única forma de enterarse de qué falla ahí adentro.
+     */
+    var errorsSent = 0;
+    window.onerror = function (message, source, line) {
+        var token = param('t');
+        if (!token || errorsSent >= 5 || !window.XMLHttpRequest) {
+            return false;
+        }
+        errorsSent++;
+        try {
+            var x = new window.XMLHttpRequest();
+            x.open('POST', '/api/send?t=' + encodeURIComponent(token), true);
+            x.setRequestHeader('Content-Type', 'application/json');
+            x.send(JSON.stringify({
+                type: 'jserror',
+                message: String(message),
+                source: String(source || '').replace(/\?.*$/, ''),
+                line: line || 0,
+                ua: navigator.userAgent
+            }));
+        } catch (e) {
+            // Nada que hacer.
+        }
+        return false;
+    };
+
     function Transport(onMessage, onStatus) {
         this.token = param('t');
         this.wsUrl = param('ws');

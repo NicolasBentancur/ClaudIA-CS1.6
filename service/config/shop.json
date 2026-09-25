@@ -1,0 +1,18 @@
+{
+    "_comentario": "Tienda (/tienda, /comprar). type: 'grupo' abre el formulario para crear un grupo (el precio sale de groups.json); 'item' se guarda en el inventario (/inventario). Las coins que se gastan acá salen de circulación.",
+
+    "items": {
+        "grupo": {
+            "name": "Grupo propio",
+            "description": "Fundá tu grupo: nombre, tag en el chat, fondo común y ranking.",
+            "type": "grupo"
+        },
+        "anillo": {
+            "name": "Anillo de compromiso",
+            "description": "Hace falta para pedir casamiento con /casarse. Se gasta si te dicen que sí.",
+            "type": "item",
+            "price": 1500,
+            "max": 3
+        }
+    }
+}

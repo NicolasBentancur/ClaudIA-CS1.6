@@ -131,6 +131,16 @@ final class GameManager
             if ($type === 'ping') {
                 return;
             }
+            if ($type === 'jserror') {
+                // Errores de JavaScript de la página (la propia página limita cuántos manda).
+                Log::warning('Error JS en MOTD', [
+                    'game' => $s->game,
+                    'message' => mb_substr((string) ($msg['message'] ?? ''), 0, 300),
+                    'at' => mb_substr((string) ($msg['source'] ?? ''), 0, 120) . ':' . (int) ($msg['line'] ?? 0),
+                    'ua' => mb_substr((string) ($msg['ua'] ?? ''), 0, 200),
+                ]);
+                return;
+            }
             $s->handler->onMessage($s, $msg);
         } catch (UserError $e) {
             $s->send(['type' => 'error', 'message' => $e->getMessage()]);
@@ -186,6 +196,12 @@ final class GameManager
         $s->ws?->close();
         $s->ws = null;
         unset($this->sessions[$s->token]);
+    }
+
+    /** Cantidad de juegos abiertos (MOTD). */
+    public function openCount(): int
+    {
+        return count($this->sessions);
     }
 
     public function closeForUser(int $userId): void

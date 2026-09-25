@@ -1,0 +1,45 @@
+/* Mate Rush: celeste y verde yerba, con toque eléctrico */
+.stage {
+    background: #10324a;
+    background: -webkit-radial-gradient(50% 30%, ellipse, #4aa3d8 0%, #174a6b 50%, #07131f 100%);
+    background: radial-gradient(ellipse at 50% 30%, #4aa3d8 0%, #174a6b 50%, #07131f 100%);
+}
+
+.stage.fs {
+    background: #1e3a12;
+    background: -webkit-radial-gradient(50% 30%, ellipse, #9ad35a 0%, #2f6b1e 50%, #0b1a06 100%);
+    background: radial-gradient(ellipse at 50% 30%, #9ad35a 0%, #2f6b1e 50%, #0b1a06 100%);
+}
+
+.hint {
+    font-size: 11px;
+    color: #dff3ff;
+}
+
+.board {
+    top: 56px;
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 3px #75d0ff, 0 0 0 6px #1f5f8a, 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.cell.zap {
+    z-index: 3;
+}
+
+/* Destello con opacidad (los filtros brightness/drop-shadow traban el MOTD del juego). */
+.cell.zap::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    right: 4px;
+    bottom: 4px;
+    border-radius: 10px;
+    background: #fff38a;
+    opacity: 0;
+    -webkit-animation: zap 0.18s linear 6 alternate;
+    animation: zap 0.18s linear 6 alternate;
+}
+
+@-webkit-keyframes zap { from { opacity: 0; } to { opacity: 0.65; } }
+@keyframes zap { from { opacity: 0; } to { opacity: 0.65; } }

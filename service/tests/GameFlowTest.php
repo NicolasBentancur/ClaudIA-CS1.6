@@ -134,6 +134,38 @@ final class GameFlowTest extends AppTestCase
         $this->assertNotEmpty($this->messages($s, 'error'));
     }
 
+    public function testSlotsSpinBuyAndSounds(): void
+    {
+        foreach (['chanchitos', 'dulce', 'materush'] as $game) {
+            $this->setUp();
+            $s = $this->openGame($game, 100000);
+            $init = $this->messages($s, 'init')[0];
+            $this->assertContains(100, $init['bets']);
+            $this->assertNotEmpty($init['buy']);
+
+            $this->app->games->receive($s, ['type' => 'spin', 'bet' => 100]);
+            $res = $this->messages($s, 'result')[0];
+            $this->assertNotEmpty($res['steps']);
+            $this->assertSame(100000 - 100 + $res['payout'], $res['balance']);
+            $this->assertSame($res['balance'], $this->app->wallet->balance($s->userId));
+
+            $option = $init['buy'][0];
+            $this->app->games->receive($s, ['type' => 'buy', 'bet' => 10, 'option' => $option['id']]);
+            $buy = $this->messages($s, 'result')[1];
+            $this->assertSame((int) round($option['price'] * 10), $buy['cost']);
+            $this->assertNotNull($buy['bonus']);
+            $this->assertSame($res['balance'] - $buy['cost'] + $buy['payout'], $buy['balance']);
+
+            // Apuesta fuera de los niveles y sonidos: solo los del JSON.
+            $this->app->games->receive($s, ['type' => 'spin', 'bet' => 7]);
+            $this->assertNotEmpty($this->messages($s, 'error'));
+            $this->events = [];
+            $this->app->games->receive($s, ['type' => 'sfx', 'name' => 'stop']);
+            $this->app->games->receive($s, ['type' => 'sfx', 'name' => 'no_existe']);
+            $this->assertSame(['claudia/slot_parada'], $this->sounds());
+        }
+    }
+
     public function testNewGameReplacesOldSession(): void
     {
         $s = $this->openGame('ruleta');

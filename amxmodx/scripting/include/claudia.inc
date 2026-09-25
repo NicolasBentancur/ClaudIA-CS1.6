@@ -41,6 +41,16 @@ native bool:claudia_is_logged(id);
 native bool:claudia_is_registered(id);
 
 /**
+ * Rol del jugador según las flags (claudia_admin_flags, claudia_staff_flags, claudia_owner_flags).
+ * La consola del servidor (id 0) es owner.
+ */
+#define CLAUDIA_ROLE_USER  0
+#define CLAUDIA_ROLE_ADMIN 1
+#define CLAUDIA_ROLE_STAFF 2
+#define CLAUDIA_ROLE_OWNER 3
+native claudia_role(id);
+
+/**
  * Se conectó o se perdió la conexión con el servicio.
  */
 forward claudia_connection_changed(bool:connected);

@@ -14,8 +14,21 @@ Las claves de los JSON que empiezan con `_` son comentarios. Después de editar 
 | `claudia_host` / `claudia_port` | `127.0.0.1` / `27100` | Dónde escucha el servicio. |
 | `claudia_secret` | - | Secreto compartido (igual que `plugin.secret` en `service.json`). |
 | `claudia_login_timeout` | `30` | Segundos para identificarse antes del kick. `0` = no expulsar. Si el servicio no responde no se expulsa a nadie. |
-| `claudia_staff_flags` | `l` | Owner/staff: ven el perfil completo de cualquiera. |
-| `claudia_admin_flags` | `l` | Comandos de admin (`amx_darcoins`, `amx_quitarcoins`, `amx_claudia_reload`). |
+| `claudia_admin_flags` | `d` | Flags del rol **admin** (alcanza con una). |
+| `claudia_staff_flags` | `m` | Flags del rol **staff**. |
+| `claudia_owner_flags` | `l` | Flags del rol **owner**. Se usa el rol más alto que tenga el jugador; la consola del servidor es owner. |
+
+## roles.json
+
+Roles: jugador < admin < staff < owner. Cada rol tiene todo lo del anterior. `permissions` dice el rol mínimo de cada acción de administración (menú `/admin`, `/admingrupo` y comandos de consola); el servicio lo verifica siempre. Además, salvo el owner, nadie puede actuar sobre un jugador conectado de su mismo rango o superior.
+
+| Por defecto | Permisos |
+|---|---|
+| admin | `admin.menu`, `admin.amxmenu`, `announce`, `players.profile`, `players.nickname`, `groups.view`, `groups.edit`, `groups.members` |
+| staff | `players.profile_full` (memoria de la IA, préstamos, movimientos), `players.memory`, `groups.create`, `groups.delete`, `groups.owner`, `coins.give`, `coins.take`, `ai.toggle` |
+| owner | `players.password` (contraseña temporal), `loans.forgive`, `promos.force`, `config.reload`, `service.status` |
+
+`coin_limits`: tope de coins por cada operación de dar o quitar, por rol (0 = sin tope). Por defecto staff 10.000 y owner sin tope.
 
 ## service.json
 
@@ -88,5 +101,69 @@ Efectos posibles:
 
 - **Ruleta:** `fps` (30) y `fallback_fps` (15), que se usa cuando hay más de `max_spins_at_full_fps` giros al mismo tiempo. También los sonidos.
 - **Blackjack:** reglas (mazos, S17, pago del blackjack, divisiones, doblar después de dividir) y sonidos.
+
+## social.json
+
+Parejas, casamientos, adopciones y familias.
+
+- `proposal_seconds`: cuánto dura una propuesta de pareja, casamiento o adopción sin respuesta.
+- `max_children` (4): hijos adoptados por familia. `max_ex` (5): ex parejas que se guardan por jugador.
+- `marriage.requires_ring`: si es true, `/casarse` necesita un anillo de la tienda (`ring_item`), que se gasta cuando aceptan.
+- `kiss`, `cupid`, `yes_no`: tiempos de espera y frases de `/besar`, `/formarpareja` y `/siono`. En las frases, `{a}`, `{b}` y `{c}` se reemplazan por nicks.
+
+## groups.json
+
+- `price` (10.000): lo que cuesta fundar un grupo. Se cobra al confirmar el formulario y sale de circulación.
+- `max_members` (16), largos de nombre, tag y descripción, y `tag_extra_chars` (símbolos permitidos en el tag).
+- `fee`: cada `rounds` (100) rondas jugadas, cada miembro que no es el dueño pone `amount` (25) en el fondo. Si no le alcanza, no se cobra y se le avisa al dueño.
+- `tax`: cada `rounds` (300) rondas que juega el dueño, se quema el `rate` (15%) del fondo.
+- El ranking de grupos es solo por kills (cosmético): nunca se crean coins. El fondo se llena únicamente con cuotas y donaciones.
+- Al disolver un grupo, el fondo se reparte en partes iguales entre los miembros.
+
+## shop.json
+
+Objetos de `/tienda`. `type: "grupo"` abre el formulario para crear un grupo (el precio sale de `groups.json`). `type: "item"` se guarda en el inventario (`price` y `max` por jugador).
+
+## Slots: games/chanchitos.json, games/dulce.json y games/materush.json
+
+Cada slot tiene estos campos:
+
+- `name`: el nombre que se muestra.
+- `bet_levels`: apuestas disponibles. Se filtran por los límites de `economy.bet`.
+- `max_win`: tope del premio, en veces la apuesta.
+- `buy`: compras de bonus. Cada una tiene `enabled` y `price` en veces la apuesta.
+- `sounds`: sonidos por evento. La página los pide sincronizados con la animación.
+- `math`: pesos, tablas de pago y funciones. **Esto define el retorno (RTP).**
+
+Las tablas vienen ajustadas a ~96% de RTP. Si cambiás algo en `math`, volvé a medir:
+
+```bash
+php tools/slot_sim.php chanchitos 1000000            # RTP del juego normal
+php tools/slot_sim.php dulce 30000 --buy=giros       # valor de la compra y precio sugerido
+```
+
+- **Precio de la compra:** tiene que ser igual a su valor esperado dividido por el RTP buscado. El simulador lo sugiere.
+- **Varianza:** los slots volátiles, como Mate Rush, necesitan millones de giros para una medición precisa. Conviene medir el juego base y la compra por separado, y combinar: RTP ≈ base + (valor del bonus / frecuencia del bonus).
+
+Qué controla el `math` de cada slot:
+
+- **Los 3 Chanchitos del Banco**
+  - `wild`: rodillos, peso, tamaños y multiplicadores del comodín.
+  - `scatter`: casitas y giros gratis.
+  - `coins`: monedas del lobo y chanchitos. Con `trigger` monedas y al menos un chanchito arranca el bonus.
+  - `hold`: el bonus Candado y Carga (re-giros, probabilidad por casilla, valores, jackpots y Grand).
+- **Dulce de Leche Bonanza**
+  - `min_count`: cantidad mínima de símbolos iguales para cobrar.
+  - `symbols`: pago según la cantidad.
+  - `scatter`: chupetines.
+  - `bomb`: bombones multiplicadores.
+  - `fs_weights`: pesos de los símbolos solo durante los giros gratis.
+- **Mate Rush**
+  - `min_cluster`: tamaño mínimo del cluster.
+  - `cells`: tope de los multiplicadores de casilla (base y giros gratis) y el valor inicial de los súper giros.
+  - `rush`: rayos.
+  - `electric`: Chispazo.
+  - `sync`: sincronización.
+  - `bonus`: soles y giros gratis.
 
 Si agregás o cambiás sonidos, sumalos también a `configs/claudia/sounds.ini` para que se precacheen y se descarguen.

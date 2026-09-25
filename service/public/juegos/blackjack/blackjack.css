@@ -65,10 +65,9 @@ body {
 
 .player {
     top: 160px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-justify-content: center;
-    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0;
 }
 
 .label {
@@ -92,14 +91,16 @@ body {
 }
 
 .cards {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-justify-content: center;
-    justify-content: center;
     height: 84px;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0;
 }
 
 .card {
+    display: inline-block;
+    vertical-align: top;
+    text-align: left;
     position: relative;
     width: 58px;
     height: 82px;
@@ -154,9 +155,10 @@ body {
     border: 3px solid #fdfbf5;
 }
 
+/* "both": mientras espera su turno (animation-delay) la carta queda oculta en el mazo, no en su lugar. */
 .card.deal {
-    -webkit-animation: deal 0.35s ease-out;
-    animation: deal 0.35s ease-out;
+    -webkit-animation: deal 0.45s ease-out both;
+    animation: deal 0.45s ease-out both;
 }
 
 @-webkit-keyframes deal {
@@ -170,10 +172,13 @@ body {
 }
 
 .hand {
+    display: inline-block;
+    vertical-align: top;
     margin: 0 14px;
     padding: 4px 6px 6px;
     border-radius: 8px;
     border: 2px solid transparent;
+    font-size: 13px;
 }
 
 .hand.active {
@@ -230,12 +235,8 @@ body {
     margin-left: -38px;
     border: 2px solid rgba(255, 232, 160, 0.7);
     border-radius: 50%;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
+    text-align: center;
+    line-height: 40px;
     font-size: 10px;
     letter-spacing: 1px;
     color: rgba(255, 232, 160, 0.8);
@@ -245,6 +246,8 @@ body {
     margin: 0;
     width: 34px;
     height: 34px;
+    line-height: 28px;
+    letter-spacing: 0;
     cursor: default;
 }
 
@@ -254,13 +257,14 @@ body {
     right: 0;
     bottom: 0;
     height: 48px;
-    padding: 0 10px;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
+    padding: 10px 10px 0;
+    white-space: nowrap;
     background: rgba(0, 0, 0, 0.55);
     border-top: 1px solid #c9a24a;
+}
+
+.actions .rgroup {
+    top: 10px;
 }
 
 .actions button {

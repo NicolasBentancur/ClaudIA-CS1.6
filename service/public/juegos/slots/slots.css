@@ -1,0 +1,347 @@
+/* Claudia - estilos comunes de los slots (escenario 640x440 escalado a la ventana del MOTD) */
+body {
+    background: #0d0616;
+}
+
+.stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 640px;
+    height: 440px;
+    overflow: hidden;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+}
+
+.board {
+    position: absolute;
+    left: 50%;
+    top: 50px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 3px rgba(255, 224, 138, 0.8), 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.cell {
+    position: absolute;
+}
+
+.cell img {
+    position: absolute;
+    left: 6%;
+    top: 6%;
+    width: 88%;
+    height: 88%;
+}
+
+.cell .val {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 12%;
+    text-align: center;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    color: #fff;
+    text-shadow: 0 0 3px #000, 0 1px 2px #000;
+    pointer-events: none;
+}
+
+.cell .val.center {
+    bottom: auto;
+    top: 50%;
+    margin-top: -9px;
+}
+
+.cell.move {
+    -webkit-transition: -webkit-transform 0.36s cubic-bezier(0.25, 1.15, 0.5, 1);
+    transition: transform 0.36s cubic-bezier(0.25, 1.15, 0.5, 1);
+}
+
+.cell.win {
+    z-index: 3;
+    -webkit-animation: winpulse 0.45s ease-in-out infinite alternate;
+    animation: winpulse 0.45s ease-in-out infinite alternate;
+}
+
+.cell.win::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    right: 3px;
+    bottom: 3px;
+    border-radius: 10px;
+    background: rgba(255, 224, 138, 0.28);
+    box-shadow: 0 0 10px 2px rgba(255, 224, 138, 0.8);
+}
+
+.cell.boom {
+    -webkit-transition: -webkit-transform 0.22s ease-in, opacity 0.22s ease-in;
+    transition: transform 0.22s ease-in, opacity 0.22s ease-in;
+    -webkit-transform: scale(1.4);
+    transform: scale(1.4);
+    opacity: 0;
+}
+
+.cell.dim {
+    opacity: 0.35;
+}
+
+@-webkit-keyframes winpulse { from { -webkit-transform: scale(1); } to { -webkit-transform: scale(1.1); } }
+@keyframes winpulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+
+.side {
+    position: absolute;
+    top: 60px;
+    width: 104px;
+    text-align: center;
+}
+
+.side.l {
+    left: 8px;
+}
+
+.side.r {
+    right: 8px;
+}
+
+.panel {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 224, 138, 0.6);
+    border-radius: 8px;
+    padding: 6px 4px;
+    margin-bottom: 8px;
+}
+
+.panel small {
+    display: block;
+    font-size: 10px;
+    color: #e8d7a8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.panel b {
+    display: block;
+    font-size: 18px;
+    color: #fff;
+    font-family: 'Arial Black', Arial, sans-serif;
+}
+
+.panel.hot {
+    border-color: #ffe08a;
+    box-shadow: 0 0 12px rgba(255, 224, 138, 0.7);
+}
+
+.bottombar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 52px;
+    padding: 5px 10px 0;
+    white-space: nowrap;
+    background: rgba(0, 0, 0, 0.6);
+    border-top: 1px solid #c9a24a;
+}
+
+.bottombar .rgroup {
+    top: 5px;
+}
+
+.betctl {
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 4px;
+}
+
+.betctl button {
+    width: 30px;
+    padding: 4px 0;
+    font-size: 16px;
+}
+
+.betctl .amount {
+    display: inline-block;
+    vertical-align: middle;
+    min-width: 76px;
+    text-align: center;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 15px;
+}
+
+.betctl .amount small {
+    display: block;
+    font-family: Tahoma, Arial, sans-serif;
+    font-size: 9px;
+    color: #c9b88a;
+    letter-spacing: 1px;
+}
+
+.spinbtn {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 21px;
+    font-size: 15px;
+    margin-left: 8px;
+}
+
+.bottombar button {
+    margin-left: 5px;
+}
+
+.turbo.on {
+    border-color: #ffe08a;
+    box-shadow: 0 0 6px #ffe08a;
+    color: #ffe08a;
+}
+
+.buybox {
+    position: absolute;
+    left: 50%;
+    top: 90px;
+    width: 300px;
+    margin-left: -150px;
+    background: #1b0f2a;
+    border: 2px solid #c9a24a;
+    border-radius: 10px;
+    padding: 12px;
+    z-index: 60;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.buybox.show {
+    display: block;
+}
+
+.buybox h3 {
+    margin: 0 0 8px;
+    text-align: center;
+    color: #ffe08a;
+    font-family: Georgia, serif;
+}
+
+.buybox .opt {
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.buybox .opt button {
+    float: right;
+    margin-top: 2px;
+}
+
+.buybox .opt span {
+    float: left;
+    width: 180px;
+}
+
+.buybox .opt small {
+    display: block;
+    color: #c9b88a;
+}
+
+.banner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40%;
+    z-index: 70;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    -webkit-transform: scale(0.6);
+    transform: scale(0.6);
+    -webkit-transition: opacity 0.25s, -webkit-transform 0.25s;
+    transition: opacity 0.25s, transform 0.25s;
+}
+
+.banner.show {
+    opacity: 1;
+    -webkit-transform: scale(1);
+    transform: scale(1);
+}
+
+.banner .t1 {
+    display: inline-block;
+    padding: 10px 24px;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 30px;
+    color: #fff3b0;
+    text-shadow: 0 0 10px #ff9d00, 0 3px 0 #7a3b00;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 12px;
+}
+
+.banner .t2 {
+    display: block;
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 3px #000;
+}
+
+.floatwin {
+    position: absolute;
+    z-index: 50;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 18px;
+    color: #fff3b0;
+    text-shadow: 0 0 6px #ff9d00, 0 2px 2px #000;
+    pointer-events: none;
+    -webkit-transition: -webkit-transform 1s ease-out, opacity 1s ease-out;
+    transition: transform 1s ease-out, opacity 1s ease-out;
+}
+
+.reelstrip {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+svg.lines {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.mult {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.mult.marked {
+    background: rgba(120, 220, 255, 0.12);
+    box-shadow: inset 0 0 0 2px rgba(120, 220, 255, 0.35);
+    border-radius: 8px;
+}
+
+.mult b {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    padding: 0 4px;
+    border-radius: 6px;
+    background: #7b2fa0;
+    color: #fff;
+    font-size: 11px;
+    font-family: 'Arial Black', Arial, sans-serif;
+    box-shadow: 0 0 6px rgba(191, 120, 255, 0.9);
+}
+
+.mult.bump b {
+    -webkit-animation: bump 0.4s ease-out;
+    animation: bump 0.4s ease-out;
+}
+
+@-webkit-keyframes bump { 0% { -webkit-transform: scale(1.8); } 100% { -webkit-transform: scale(1); } }
+@keyframes bump { 0% { transform: scale(1.8); } 100% { transform: scale(1); } }
