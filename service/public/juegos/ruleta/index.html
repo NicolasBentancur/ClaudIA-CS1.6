@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ruleta - Claudia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../comun/comun.css">
+<link rel="stylesheet" href="ruleta.css">
+</head>
+<body>
+<div id="stage" class="stage">
+    <div class="topbar">
+        <span class="title">Ruleta</span>
+        <div class="stat"><small>Saldo</small><b id="balance">-</b></div>
+        <div class="stat"><small>Apuesta</small><b id="total">0</b></div>
+        <div class="stat"><small>Límites</small><b id="limits">-</b></div>
+        <div class="spacer"></div>
+        <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="main">
+        <div class="left">
+            <div class="wheel-box" id="wheelBox">
+                <div class="pointer-arm" id="pointerArm"><div class="pointer"></div></div>
+                <img class="wheel" id="wheel" src="img/rueda.svg" alt="Ruleta" draggable="false">
+                <div class="ball" id="ball"></div>
+            </div>
+            <div class="result" id="result"><span class="num" id="resultNum">-</span><span class="txt" id="resultTxt">Hagan sus apuestas</span></div>
+            <div class="history" id="history"></div>
+        </div>
+
+        <div class="right">
+            <div class="table" id="table">
+                <div class="zero" id="zero">0</div>
+                <div class="grid" id="grid"></div>
+                <div class="cols" id="cols"></div>
+                <div class="chipsLayer" id="chipsLayer"></div>
+            </div>
+            <div class="row dozens" id="dozens"></div>
+            <div class="row simples" id="simples"></div>
+            <div class="row announced" id="announced"></div>
+            <div class="row controls">
+                <button id="undo">Deshacer</button>
+                <button id="clear">Borrar</button>
+                <button id="repeat">Repetir</button>
+                <button id="double">x2</button>
+                <div class="spacer"></div>
+                <span class="status" id="status"></span>
+                <button id="spin" class="primary">GIRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="overlay" class="overlay"></div>
+</div>
+<script src="../comun/claudia.js"></script>
+<script src="ruleta.js"></script>
+</body>
+</html>

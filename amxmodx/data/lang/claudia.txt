@@ -1,0 +1,33 @@
+[en]
+CLAUDIA_OFFLINE = Claudia no está disponible en este momento, probá en un rato.
+CLAUDIA_HUD_REGISTER = Claudia: este nick no está registrado.^nEscribí /registrar en el chat.^nTenés %d segundos.
+CLAUDIA_HUD_LOGIN = Claudia: este nick está registrado.^nEscribí /login en el chat.^nTenés %d segundos.
+CLAUDIA_CHAT_REGISTER = Registrate para jugar: escribí /registrar y poné una contraseña.
+CLAUDIA_CHAT_LOGIN = Ese nick está registrado: escribí /login y poné tu contraseña.
+CLAUDIA_KICK = No te identificaste a tiempo. Entrá de nuevo y usá /login o /registrar.
+CLAUDIA_ASK_PASSWORD = Escribí tu contraseña en la barra y apretá Enter (no se ve en el chat).
+CLAUDIA_ASK_NEW_PASSWORD = Elegí una contraseña (sin espacios) y apretá Enter.
+CLAUDIA_ASK_CONFIRM = Repetí la contraseña para confirmar.
+CLAUDIA_ASK_OLD_PASSWORD = Escribí tu contraseña ACTUAL.
+CLAUDIA_ASK_CHANGE_NEW = Escribí la contraseña NUEVA.
+CLAUDIA_MISMATCH = Las contraseñas no coinciden. Probá de nuevo con /registrar.
+CLAUDIA_ALREADY_LOGGED = Ya estás identificado.
+CLAUDIA_PASSWORD_CHANGED = Contraseña cambiada.
+CLAUDIA_NICK_CHANGED = Te cambiaste el nick: tenés que identificarte de nuevo.
+
+[es]
+CLAUDIA_OFFLINE = Claudia no está disponible en este momento, probá en un rato.
+CLAUDIA_HUD_REGISTER = Claudia: este nick no está registrado.^nEscribí /registrar en el chat.^nTenés %d segundos.
+CLAUDIA_HUD_LOGIN = Claudia: este nick está registrado.^nEscribí /login en el chat.^nTenés %d segundos.
+CLAUDIA_CHAT_REGISTER = Registrate para jugar: escribí /registrar y poné una contraseña.
+CLAUDIA_CHAT_LOGIN = Ese nick está registrado: escribí /login y poné tu contraseña.
+CLAUDIA_KICK = No te identificaste a tiempo. Entrá de nuevo y usá /login o /registrar.
+CLAUDIA_ASK_PASSWORD = Escribí tu contraseña en la barra y apretá Enter (no se ve en el chat).
+CLAUDIA_ASK_NEW_PASSWORD = Elegí una contraseña (sin espacios) y apretá Enter.
+CLAUDIA_ASK_CONFIRM = Repetí la contraseña para confirmar.
+CLAUDIA_ASK_OLD_PASSWORD = Escribí tu contraseña ACTUAL.
+CLAUDIA_ASK_CHANGE_NEW = Escribí la contraseña NUEVA.
+CLAUDIA_MISMATCH = Las contraseñas no coinciden. Probá de nuevo con /registrar.
+CLAUDIA_ALREADY_LOGGED = Ya estás identificado.
+CLAUDIA_PASSWORD_CHANGED = Contraseña cambiada.
+CLAUDIA_NICK_CHANGED = Te cambiaste el nick: tenés que identificarte de nuevo.

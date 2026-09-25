@@ -1,0 +1,35 @@
+{
+    "name": "claudia/service",
+    "description": "Servicio intermedio de Claudia: IA, SQLite, economía y juegos por MOTD para el plugin AMXX.",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo_sqlite": "*",
+        "workerman/workerman": "^5.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Claudia\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Claudia\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "start": "php bin/claudia.php start"
+    },
+    "config": {
+        "sort-packages": true,
+        "platform-check": false
+    }
+}

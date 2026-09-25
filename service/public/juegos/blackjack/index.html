@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Blackjack - Claudia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../comun/comun.css">
+<link rel="stylesheet" href="blackjack.css">
+</head>
+<body>
+<div id="stage" class="stage">
+    <div class="topbar">
+        <span class="title">Blackjack</span>
+        <div class="stat"><small>Saldo</small><b id="balance">-</b></div>
+        <div class="stat"><small>Apuesta</small><b id="bet">0</b></div>
+        <div class="spacer"></div>
+        <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="felt">
+        <div class="arc">BLACKJACK PAGA 3 A 2 &nbsp;·&nbsp; <span id="rulesText">EL CRUPIER SE PLANTA EN 17</span></div>
+        <div class="shoe"></div>
+
+        <div class="area dealer">
+            <div class="label">Crupier <span class="value" id="dealerValue"></span></div>
+            <div class="cards" id="dealerCards"></div>
+        </div>
+
+        <div class="message" id="message">Poné tu apuesta y repartí</div>
+
+        <div class="area player" id="hands"></div>
+
+        <div class="betspot" id="betspot"><span id="betspotText">APUESTA</span></div>
+    </div>
+
+    <div class="actions">
+        <button id="clearBet">Borrar</button>
+        <button id="rebet">Repetir</button>
+        <div class="spacer"></div>
+        <button id="hit">Pedir</button>
+        <button id="stand">Plantarse</button>
+        <button id="double">Doblar</button>
+        <button id="split">Dividir</button>
+        <button id="deal" class="primary">REPARTIR</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="overlay" class="overlay"></div>
+</div>
+<script src="../comun/claudia.js"></script>
+<script src="blackjack.js"></script>
+</body>
+</html>

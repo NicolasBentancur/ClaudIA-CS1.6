@@ -1,0 +1,115 @@
+{
+    "_comentario": "Trabajos. Cada trabajo tiene empleadores (multiplicadores de sueldo, bonus, ascenso y despido) y niveles (sueldo diario, bonus y condiciones para ascender). Se cobra cada claim_cooldown_hours con /cobrar. Si te echan o renunciás y volvés al mismo trabajo, entrás rehire_level_penalty / resign_level_penalty niveles más abajo del que tenías.",
+    "claim_cooldown_hours": 24,
+    "rehire_level_penalty": 1,
+    "resign_level_penalty": 1,
+    "rehire_cooldown_hours": 24,
+
+    "performance": {
+        "_comentario": "Rendimiento (0 a 1) = (1 - random_weight) * actividad + random_weight * azar. actividad = min(1, puntos / target_activity), con puntos = minutos jugados * w + kills * w + mensajes * w desde el último cobro.",
+        "weights": { "playtime_minutes": 1.0, "kills": 2.0, "messages": 0.3 },
+        "target_activity": 120,
+        "random_weight": 0.35
+    },
+
+    "jobs": {
+        "policia": {
+            "name": "Policía",
+            "description": "Patrullar el servidor. Paga parejo y cuanto más matás, mejor rendís.",
+            "requirements": { "min_kills": 20 },
+            "employers": {
+                "ministerio": { "name": "Ministerio del Interior", "description": "Estable, cuesta que te echen.", "salary_multiplier": 1.0, "bonus_multiplier": 0.8, "promotion_multiplier": 0.9, "fire_multiplier": 0.5 },
+                "privada": { "name": "Seguridad privada", "description": "Paga más, pero te echan por nada.", "salary_multiplier": 1.25, "bonus_multiplier": 1.2, "promotion_multiplier": 1.0, "fire_multiplier": 1.5 }
+            },
+            "levels": [
+                { "name": "Cadete", "salary": 250, "bonus": { "chance": 0.10, "min": 50, "max": 150 }, "promote": { "min_days": 3, "min_performance": 0.65 } },
+                { "name": "Agente", "salary": 400, "bonus": { "chance": 0.12, "min": 80, "max": 250 }, "promote": { "min_days": 5, "min_performance": 0.70 } },
+                { "name": "Cabo", "salary": 600, "bonus": { "chance": 0.15, "min": 120, "max": 400 }, "promote": { "min_days": 7, "min_performance": 0.75 } },
+                { "name": "Sargento", "salary": 850, "bonus": { "chance": 0.18, "min": 200, "max": 600 }, "promote": { "min_days": 10, "min_performance": 0.80 } },
+                { "name": "Comisario", "salary": 1200, "bonus": { "chance": 0.20, "min": 300, "max": 1000 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.40 }
+        },
+        "taxista": {
+            "name": "Taxista",
+            "description": "Llevar gente de acá para allá. Sin requisitos, buenos bonus por propina.",
+            "requirements": {},
+            "employers": {
+                "radiotaxi": { "name": "Radio Taxi del Centro", "description": "Sueldo fijo y tranquilo.", "salary_multiplier": 1.0, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 0.8 },
+                "app": { "name": "App de viajes", "description": "Menos sueldo, muchas más propinas.", "salary_multiplier": 0.8, "bonus_multiplier": 1.8, "promotion_multiplier": 1.2, "fire_multiplier": 1.2 }
+            },
+            "levels": [
+                { "name": "Suplente", "salary": 200, "bonus": { "chance": 0.25, "min": 30, "max": 120 }, "promote": { "min_days": 2, "min_performance": 0.60 } },
+                { "name": "Chofer", "salary": 320, "bonus": { "chance": 0.28, "min": 50, "max": 200 }, "promote": { "min_days": 5, "min_performance": 0.65 } },
+                { "name": "Chofer con coche propio", "salary": 500, "bonus": { "chance": 0.30, "min": 80, "max": 300 }, "promote": { "min_days": 8, "min_performance": 0.75 } },
+                { "name": "Dueño de flota", "salary": 800, "bonus": { "chance": 0.35, "min": 150, "max": 600 } }
+            ],
+            "fire": { "performance_below": 0.15, "chance": 0.35 }
+        },
+        "almacenero": {
+            "name": "Almacenero",
+            "description": "Atender el mostrador del barrio. Tranquilo y sin sobresaltos.",
+            "requirements": {},
+            "employers": {
+                "almacen": { "name": "Almacén del barrio", "description": "El dueño es buena gente, casi nunca echa a nadie.", "salary_multiplier": 0.9, "bonus_multiplier": 1.0, "promotion_multiplier": 0.8, "fire_multiplier": 0.3 },
+                "super": { "name": "Supermercado", "description": "Paga un poco más, más exigente.", "salary_multiplier": 1.15, "bonus_multiplier": 0.9, "promotion_multiplier": 1.1, "fire_multiplier": 1.1 }
+            },
+            "levels": [
+                { "name": "Repositor", "salary": 180, "bonus": { "chance": 0.08, "min": 30, "max": 100 }, "promote": { "min_days": 3, "min_performance": 0.55 } },
+                { "name": "Cajero", "salary": 280, "bonus": { "chance": 0.10, "min": 50, "max": 150 }, "promote": { "min_days": 6, "min_performance": 0.65 } },
+                { "name": "Encargado", "salary": 450, "bonus": { "chance": 0.12, "min": 80, "max": 250 }, "promote": { "min_days": 10, "min_performance": 0.75 } },
+                { "name": "Socio", "salary": 700, "bonus": { "chance": 0.15, "min": 150, "max": 500 } }
+            ],
+            "fire": { "performance_below": 0.15, "chance": 0.30 }
+        },
+        "funcionario": {
+            "name": "Funcionario público",
+            "description": "Sueldo seguro y casi imposible que te echen. Pide horas en el servidor.",
+            "requirements": { "min_playtime_hours": 5 },
+            "employers": {
+                "intendencia": { "name": "Intendencia", "description": "Horario corto, ascensos lentos.", "salary_multiplier": 1.0, "bonus_multiplier": 0.5, "promotion_multiplier": 0.7, "fire_multiplier": 0.1 },
+                "ministerio": { "name": "Ministerio", "description": "Un poco más de sueldo, igual de lento.", "salary_multiplier": 1.1, "bonus_multiplier": 0.6, "promotion_multiplier": 0.8, "fire_multiplier": 0.2 }
+            },
+            "levels": [
+                { "name": "Pasante", "salary": 300, "bonus": { "chance": 0.05, "min": 50, "max": 100 }, "promote": { "min_days": 5, "min_performance": 0.50 } },
+                { "name": "Administrativo", "salary": 450, "bonus": { "chance": 0.05, "min": 80, "max": 150 }, "promote": { "min_days": 10, "min_performance": 0.55 } },
+                { "name": "Jefe de sección", "salary": 700, "bonus": { "chance": 0.06, "min": 100, "max": 250 }, "promote": { "min_days": 15, "min_performance": 0.60 } },
+                { "name": "Director", "salary": 1000, "bonus": { "chance": 0.08, "min": 200, "max": 500 } }
+            ],
+            "fire": { "performance_below": 0.10, "chance": 0.20 }
+        },
+        "programador": {
+            "name": "Programador",
+            "description": "Buen sueldo si rendís. Pide experiencia (horas jugadas) y plata para la compu.",
+            "requirements": { "min_playtime_hours": 10, "min_coins": 2000 },
+            "employers": {
+                "software": { "name": "Software factory", "description": "Sueldo en blanco y ascensos claros.", "salary_multiplier": 1.0, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 1.0 },
+                "freelance": { "name": "Freelance", "description": "Sueldo irregular: poco fijo y bonus grandes.", "salary_multiplier": 0.7, "bonus_multiplier": 2.2, "promotion_multiplier": 1.3, "fire_multiplier": 1.4 }
+            },
+            "levels": [
+                { "name": "Trainee", "salary": 400, "bonus": { "chance": 0.10, "min": 100, "max": 300 }, "promote": { "min_days": 4, "min_performance": 0.65 } },
+                { "name": "Junior", "salary": 650, "bonus": { "chance": 0.12, "min": 150, "max": 450 }, "promote": { "min_days": 7, "min_performance": 0.70 } },
+                { "name": "Semi senior", "salary": 950, "bonus": { "chance": 0.14, "min": 250, "max": 700 }, "promote": { "min_days": 10, "min_performance": 0.75 } },
+                { "name": "Senior", "salary": 1400, "bonus": { "chance": 0.16, "min": 400, "max": 1200 }, "promote": { "min_days": 15, "min_performance": 0.85 } },
+                { "name": "Tech lead", "salary": 2000, "bonus": { "chance": 0.18, "min": 600, "max": 2000 } }
+            ],
+            "fire": { "performance_below": 0.25, "chance": 0.45 }
+        },
+        "peon": {
+            "name": "Peón rural",
+            "description": "Laburo de campo en el interior. Duro y con poco sueldo, pero no piden nada.",
+            "requirements": {},
+            "employers": {
+                "estancia": { "name": "Estancia", "description": "Te dan casa y comida: el sueldo rinde.", "salary_multiplier": 1.0, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 0.7 },
+                "tambo": { "name": "Tambo", "description": "Madrugás todos los días, pero paga mejor.", "salary_multiplier": 1.2, "bonus_multiplier": 0.8, "promotion_multiplier": 1.0, "fire_multiplier": 1.2 }
+            },
+            "levels": [
+                { "name": "Peón", "salary": 150, "bonus": { "chance": 0.10, "min": 20, "max": 80 }, "promote": { "min_days": 2, "min_performance": 0.55 } },
+                { "name": "Peón de confianza", "salary": 250, "bonus": { "chance": 0.12, "min": 40, "max": 120 }, "promote": { "min_days": 5, "min_performance": 0.65 } },
+                { "name": "Capataz", "salary": 420, "bonus": { "chance": 0.14, "min": 80, "max": 250 }, "promote": { "min_days": 10, "min_performance": 0.75 } },
+                { "name": "Mayordomo", "salary": 650, "bonus": { "chance": 0.16, "min": 120, "max": 400 } }
+            ],
+            "fire": { "performance_below": 0.15, "chance": 0.35 }
+        }
+    }
+}

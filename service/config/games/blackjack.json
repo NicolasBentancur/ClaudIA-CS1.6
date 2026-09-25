@@ -1,0 +1,20 @@
+{
+    "_comentario": "Blackjack por MOTD. Reglas: dealer_hits_soft17=false -> el crupier se planta en 17 blando (S17). blackjack_payout 1.5 = 3:2. max_splits 1 = se puede dividir una vez.",
+    "enabled": true,
+    "rules": {
+        "decks": 6,
+        "penetration": 0.75,
+        "dealer_hits_soft17": false,
+        "blackjack_payout": 1.5,
+        "max_splits": 1,
+        "double_after_split": true,
+        "split_by_value": true
+    },
+    "sounds": {
+        "card": "claudia/bj_carta",
+        "chip": "claudia/bj_ficha",
+        "win": "claudia/ganar",
+        "lose": "claudia/perder",
+        "push": "claudia/bj_empate"
+    }
+}

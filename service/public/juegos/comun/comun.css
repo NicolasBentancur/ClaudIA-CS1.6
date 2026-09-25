@@ -1,0 +1,184 @@
+/* Claudia - estilos comunes de los juegos (pensados para la ventana MOTD, ~640x480) */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 13px;
+    color: #f4efe2;
+    background: #0b2a1a;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+button {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: bold;
+    color: #f8f3e6;
+    background: #3b2a16;
+    background: -webkit-linear-gradient(top, #6a4a24, #3b2a16);
+    background: linear-gradient(to bottom, #6a4a24, #3b2a16);
+    border: 1px solid #c9a24a;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-shadow: 0 1px 0 #000;
+}
+
+button:hover {
+    border-color: #ffe08a;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+button.primary {
+    background: #7a1f16;
+    background: -webkit-linear-gradient(top, #c0392b, #7a1f16);
+    background: linear-gradient(to bottom, #c0392b, #7a1f16);
+    font-size: 14px;
+    padding: 6px 16px;
+}
+
+.topbar {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    height: 42px;
+    padding: 0 10px;
+    background: rgba(0, 0, 0, 0.55);
+    border-bottom: 1px solid #c9a24a;
+}
+
+.topbar .title {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 18px;
+    color: #ffe08a;
+    margin-right: 14px;
+    letter-spacing: 1px;
+}
+
+.stat {
+    margin-right: 14px;
+    line-height: 1.1;
+}
+
+.stat small {
+    display: block;
+    font-size: 10px;
+    color: #c9b88a;
+    text-transform: uppercase;
+}
+
+.stat b {
+    font-size: 15px;
+    color: #fff;
+}
+
+.spacer {
+    -webkit-flex: 1;
+    flex: 1;
+}
+
+.chips {
+    display: -webkit-flex;
+    display: flex;
+}
+
+.chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    margin-left: 4px;
+    border: 3px dashed rgba(255, 255, 255, 0.85);
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 1px 1px #000;
+    cursor: pointer;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+}
+
+.chip.selected {
+    outline: 2px solid #ffe08a;
+    -webkit-transform: translateY(-3px);
+    transform: translateY(-3px);
+}
+
+.chip-0 { background: #8a8a8a; }
+.chip-1 { background: #1f6fb5; }
+.chip-2 { background: #b3202a; }
+.chip-3 { background: #1f8a4c; }
+.chip-4 { background: #222; }
+.chip-5 { background: #7b2fa0; }
+
+.toast {
+    position: absolute;
+    left: 50%;
+    bottom: 58px;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid #c9a24a;
+    border-radius: 6px;
+    padding: 8px 14px;
+    opacity: 0;
+    -webkit-transition: opacity 0.3s;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 50;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+.toast.error {
+    border-color: #e74c3c;
+    color: #ffb3a8;
+}
+
+.toast.win {
+    border-color: #2ecc71;
+    color: #b8ffcf;
+}
+
+.overlay {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    font-size: 16px;
+    text-align: center;
+    padding: 30px;
+}
+
+.overlay.show {
+    display: -webkit-flex;
+    display: flex;
+}

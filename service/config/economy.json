@@ -1,0 +1,36 @@
+{
+    "_comentario": "Economía general (URU Coins).",
+    "currency": "URU Coins",
+
+    "transfer": {
+        "min": 1,
+        "fee_rate": 0.0
+    },
+
+    "bet": {
+        "min": 10,
+        "max": 10000
+    },
+
+    "chips": {
+        "_comentario": "Fichas de los juegos: se muestran 'count' denominaciones de la lista, la mayor es como mucho balance_fraction del saldo (y nunca más que la apuesta máxima).",
+        "denominations": [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+        "count": 6,
+        "balance_fraction": 0.25
+    },
+
+    "clearing": {
+        "_comentario": "Días de atraso para entrar al Clearing y porcentaje de las ganancias de los juegos que se confisca mientras esté adentro.",
+        "days_overdue": 5,
+        "confiscation_rate": 0.5
+    },
+
+    "ranking": {
+        "_comentario": "Puntaje del ranking de juego = kills*kills + deaths*deaths + headshots*headshots",
+        "game_score": {
+            "kills": 1,
+            "deaths": -0.5,
+            "headshots": 0.5
+        }
+    }
+}

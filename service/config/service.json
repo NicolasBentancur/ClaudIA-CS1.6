@@ -1,0 +1,56 @@
+{
+    "_comentario": "Configuración general del servicio. Reiniciá el servicio después de cambiar puertos.",
+    "timezone": "America/Montevideo",
+    "chat_tag": "{green}[Claudia]{default} ",
+
+    "plugin": {
+        "_comentario": "Socket TCP local para el plugin AMXX. El secreto tiene que ser igual a claudia_secret en claudia.cfg.",
+        "host": "127.0.0.1",
+        "port": 27100,
+        "secret": "CAMBIAR-ESTE-SECRETO"
+    },
+
+    "http": {
+        "_comentario": "Páginas de los juegos (MOTD). Este puerto y el de ws tienen que estar abiertos hacia Internet. public_host vacío = IP del servidor de CS.",
+        "host": "0.0.0.0",
+        "port": 27101,
+        "public_host": ""
+    },
+
+    "ws": {
+        "host": "0.0.0.0",
+        "port": 27102
+    },
+
+    "database": "data/claudia.sqlite",
+    "ca_bundle": "",
+
+    "log": {
+        "file": "logs/claudia.log",
+        "level": "info"
+    },
+
+    "session_resume_seconds": 180,
+
+    "auth": {
+        "min_password": 4,
+        "max_password": 32,
+        "max_failed": 5,
+        "lock_seconds": 120,
+        "forbidden_nicks": ["player", "unnamed", "unnamed player"]
+    },
+
+    "nickname": {
+        "max_length": 20,
+        "blocked_words": []
+    },
+
+    "games": {
+        "idle_seconds": 600
+    },
+
+    "debug": {
+        "_comentario": "Adelanta el reloj del servicio (en segundos) para probar vencimientos y sueldos. 0 en producción.",
+        "time_offset_seconds": 0
+    }
+}

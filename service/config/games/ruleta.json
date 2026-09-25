@@ -1,0 +1,13 @@
+{
+    "_comentario": "Ruleta francesa por MOTD. Los frames se calculan en el servidor a 'fps' (baja a 'fallback_fps' si hay más de max_spins_at_full_fps giros simultáneos). Los sonidos son rutas relativas a sound/ sin extensión (tienen que estar en configs/claudia/sounds.ini del plugin).",
+    "enabled": true,
+    "fps": 30,
+    "fallback_fps": 15,
+    "max_spins_at_full_fps": 8,
+    "sounds": {
+        "spin": "claudia/ruleta_giro",
+        "bounce": "claudia/ruleta_rebote",
+        "win": "claudia/ganar",
+        "lose": "claudia/perder"
+    }
+}

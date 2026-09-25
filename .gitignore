@@ -1,0 +1,13 @@
+# Herramientas descargadas localmente (PHP, Composer, compilador AMXX)
+.tools/
+
+# Dependencias y datos del servicio
+service/vendor/
+service/data/
+service/logs/
+service/config/secrets.json
+service/.phpunit.cache/
+
+# Binarios compilados
+build/
+*.amxx

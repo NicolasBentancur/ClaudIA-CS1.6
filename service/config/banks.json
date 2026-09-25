@@ -1,0 +1,75 @@
+{
+    "_comentario": "Bancos. terms: plazos (días) y tasa total del préstamo para ese plazo (0.08 = 8% sobre el capital). late_daily_rate: recargo diario compuesto sobre lo adeudado cuando se vence. liquidity: plata que tiene el banco para prestar (se regenera liquidity_regen_per_day por día hasta ese tope). unemployed_max: máximo para desempleados (null = no les presta). salary_multiplier: tope = sueldo diario x este número.",
+    "banks": {
+        "brou": {
+            "name": "BROU",
+            "description": "Banco estatal. Las tasas más bajas y plazos largos, pero solo le presta a gente con trabajo.",
+            "liquidity": 500000,
+            "liquidity_regen_per_day": 0.05,
+            "min_amount": 500,
+            "max_amount": 20000,
+            "unemployed_max": null,
+            "salary_multiplier": 20,
+            "terms": [
+                { "days": 7, "rate": 0.05 },
+                { "days": 15, "rate": 0.09 },
+                { "days": 30, "rate": 0.15 }
+            ],
+            "late_daily_rate": 0.02,
+            "max_active_loans": 1,
+            "requirements": { "requires_job": true, "min_playtime_hours": 1 }
+        },
+        "santander": {
+            "name": "Santander",
+            "description": "Le presta a casi cualquiera, incluso sin trabajo, pero cobra más caro.",
+            "liquidity": 300000,
+            "liquidity_regen_per_day": 0.08,
+            "min_amount": 200,
+            "max_amount": 30000,
+            "unemployed_max": 3000,
+            "salary_multiplier": 15,
+            "terms": [
+                { "days": 7, "rate": 0.10 },
+                { "days": 15, "rate": 0.18 },
+                { "days": 30, "rate": 0.30 }
+            ],
+            "late_daily_rate": 0.03,
+            "max_active_loans": 1,
+            "requirements": {}
+        },
+        "anda": {
+            "name": "ANDA",
+            "description": "Créditos chicos y al toque, sin requisitos. Plazos cortos y la tasa más alta.",
+            "liquidity": 100000,
+            "liquidity_regen_per_day": 0.15,
+            "min_amount": 50,
+            "max_amount": 5000,
+            "unemployed_max": 5000,
+            "terms": [
+                { "days": 3, "rate": 0.06 },
+                { "days": 7, "rate": 0.12 }
+            ],
+            "late_daily_rate": 0.04,
+            "max_active_loans": 2,
+            "requirements": {}
+        },
+        "bbva": {
+            "name": "BBVA",
+            "description": "Montos grandes para gente con carrera: pide nivel 2 en el trabajo y 10 horas jugadas.",
+            "liquidity": 800000,
+            "liquidity_regen_per_day": 0.05,
+            "min_amount": 2000,
+            "max_amount": 50000,
+            "unemployed_max": null,
+            "salary_multiplier": 30,
+            "terms": [
+                { "days": 15, "rate": 0.12 },
+                { "days": 30, "rate": 0.20 },
+                { "days": 60, "rate": 0.35 }
+            ],
+            "late_daily_rate": 0.025,
+            "max_active_loans": 1,
+            "requirements": { "requires_job": true, "min_job_level": 2, "min_playtime_hours": 10 }
+        }
+    }
+}

@@ -1,0 +1,56 @@
+{
+    "_comentario": "Inteligencia artificial de Claudia. La personalidad se edita en personality.md.",
+    "enabled": true,
+    "chat_prefix": "{green}Claudia{default}: ",
+
+    "mention_keywords": ["claudia", "clau", "claudi", "claudita", "claudiña"],
+    "cooldown_seconds": 25,
+    "global_limit_per_minute": 5,
+    "recent_game_seconds": 20,
+    "history_messages": 15,
+
+    "max_reply_chars": 180,
+    "max_reply_lines": 2,
+    "strip_accents": false,
+
+    "_on_all_fail": "silence = no responde; message = manda all_fail_message",
+    "on_all_fail": "message",
+    "all_fail_message": "Me quedé sin cuota, bo. Después hablamos.",
+
+    "models": [
+        { "provider": "gemini", "model": "gemini-3.8-flash", "timeout": 12 },
+        { "provider": "gemini", "model": "gemini-3.6-flash", "timeout": 12 },
+        { "provider": "gemini", "model": "gemini-3.5-flash", "timeout": 12 },
+        { "provider": "groq", "model": "llama-3.3-70b-versatile", "timeout": 12 },
+        { "provider": "groq", "model": "openai/gpt-oss-120b", "timeout": 15, "extra": { "reasoning_effort": "low" } },
+        { "provider": "groq", "model": "openai/gpt-oss-20b", "timeout": 15, "extra": { "reasoning_effort": "low" } }
+    ],
+
+    "gemini": {
+        "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        "temperature": 1.0,
+        "max_output_tokens": 2048,
+        "thinking_level": "low",
+        "safety_threshold": "BLOCK_ONLY_HIGH",
+        "safety_categories": [
+            "HARM_CATEGORY_HARASSMENT",
+            "HARM_CATEGORY_HATE_SPEECH",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+            "HARM_CATEGORY_DANGEROUS_CONTENT"
+        ]
+    },
+
+    "groq": {
+        "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+        "temperature": 0.9,
+        "max_tokens": 1024
+    },
+
+    "memory": {
+        "summary_threshold_words": 3000,
+        "summary_target_words": 600,
+        "summary_check_interval_seconds": 300,
+        "max_thoughts_in_prompt": 8,
+        "max_facts_in_prompt": 10
+    }
+}

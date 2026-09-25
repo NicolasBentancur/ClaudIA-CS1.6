@@ -1,0 +1,8 @@
+{
+    "_comentario": "Recordatorios y cumpleaños.",
+    "max_pending": 10,
+    "max_text_length": 120,
+    "max_days_ahead": 366,
+    "birthday_gift": 500,
+    "sound": "claudia/recordatorio"
+}

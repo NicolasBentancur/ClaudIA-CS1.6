@@ -1,0 +1,54 @@
+{
+    "_comentario": "Promociones generales (valen para todos). Cada roll_interval_hours se sortea cada promoción inactiva con su 'probability'. Efectos: bank_rate, bank_max, bank_late_rate (con 'bank': id o '*'), salary, bonus_chance. 'multiplier' se multiplica al valor normal.",
+    "roll_interval_hours": 6,
+    "promotions": [
+        {
+            "id": "brou_tasa_rebajada",
+            "name": "BROU: tasa a mitad de precio",
+            "description": "El BROU cobra la mitad de interés en los préstamos nuevos.",
+            "probability": 0.10,
+            "duration_hours": 24,
+            "effects": [{ "type": "bank_rate", "bank": "brou", "multiplier": 0.5 }]
+        },
+        {
+            "id": "santander_monto_extra",
+            "name": "Santander: más crédito",
+            "description": "Santander presta hasta un 50% más.",
+            "probability": 0.10,
+            "duration_hours": 24,
+            "effects": [{ "type": "bank_max", "bank": "santander", "multiplier": 1.5 }]
+        },
+        {
+            "id": "anda_perdona_recargos",
+            "name": "ANDA: recargos a la mitad",
+            "description": "Los préstamos nuevos de ANDA tienen la mitad de recargo por atraso.",
+            "probability": 0.08,
+            "duration_hours": 24,
+            "effects": [{ "type": "bank_late_rate", "bank": "anda", "multiplier": 0.5 }]
+        },
+        {
+            "id": "bbva_tasa_preferencial",
+            "name": "BBVA: tasa preferencial",
+            "description": "BBVA baja un 30% la tasa de interés.",
+            "probability": 0.08,
+            "duration_hours": 24,
+            "effects": [{ "type": "bank_rate", "bank": "bbva", "multiplier": 0.7 }]
+        },
+        {
+            "id": "aguinaldo",
+            "name": "Aguinaldo",
+            "description": "Todos los sueldos pagan un 50% más.",
+            "probability": 0.05,
+            "duration_hours": 12,
+            "effects": [{ "type": "salary", "multiplier": 1.5 }]
+        },
+        {
+            "id": "dia_del_trabajador",
+            "name": "Día del trabajador",
+            "description": "Doble chance de bonus en todos los trabajos.",
+            "probability": 0.05,
+            "duration_hours": 24,
+            "effects": [{ "type": "bonus_chance", "multiplier": 2 }]
+        }
+    ]
+}

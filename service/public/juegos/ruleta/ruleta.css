@@ -1,0 +1,392 @@
+/* Ruleta francesa - escenario fijo de 640x440 que se escala a la ventana del MOTD */
+body {
+    background: #06190f;
+}
+
+.stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 640px;
+    height: 440px;
+    background: #0d4d2c;
+    background: -webkit-radial-gradient(center, ellipse, #16733f 0%, #0b3d22 75%, #06231a 100%);
+    background: radial-gradient(ellipse at center, #16733f 0%, #0b3d22 75%, #06231a 100%);
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    overflow: hidden;
+}
+
+.main {
+    position: absolute;
+    top: 42px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.left {
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    width: 232px;
+}
+
+.wheel-box {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 6px auto 0;
+}
+
+.wheel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 220px;
+    height: 220px;
+    z-index: 2;
+    border-radius: 50%;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+/* El puntero va DEBAJO de la ruleta: gira alrededor del centro siguiendo a la bola y asoma por el borde. */
+.pointer-arm {
+    position: absolute;
+    left: 110px;
+    top: 0;
+    width: 0;
+    height: 110px;
+    z-index: 1;
+    -webkit-transform-origin: 0 110px;
+    transform-origin: 0 110px;
+}
+
+.pointer {
+    position: absolute;
+    left: -8px;
+    top: -14px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 16px solid #ffe08a;
+    -webkit-filter: drop-shadow(0 0 3px #000);
+    filter: drop-shadow(0 0 3px #000);
+}
+
+.ball {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: #fff;
+    background: -webkit-radial-gradient(35% 35%, circle, #fff 0%, #ddd 50%, #888 100%);
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #ddd 50%, #888 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    z-index: 3;
+    visibility: hidden;
+}
+
+.result {
+    margin: 12px auto 0;
+    width: 200px;
+    height: 46px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid #c9a24a;
+    border-radius: 6px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    padding: 0 8px;
+}
+
+.result .num {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #333;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    margin-right: 8px;
+    border: 2px solid #ffe08a;
+}
+
+.result .txt {
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.result.win {
+    border-color: #2ecc71;
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.6);
+}
+
+.num.rojo, .hist.rojo { background: #b3202a; }
+.num.negro, .hist.negro { background: #161616; }
+.num.verde, .hist.verde { background: #0e7a3b; }
+
+.history {
+    margin: 10px auto 0;
+    width: 220px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+
+.hist {
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    margin: 2px;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.right {
+    position: absolute;
+    left: 246px;
+    top: 10px;
+    width: 386px;
+}
+
+.table {
+    position: relative;
+    width: 386px;
+    height: 105px;
+}
+
+.zero {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 30px;
+    height: 105px;
+    background: #0e7a3b;
+    border: 1px solid #e8dcb5;
+    border-radius: 14px 0 0 14px;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.grid {
+    position: absolute;
+    left: 30px;
+    top: 0;
+    width: 312px;
+    height: 105px;
+    cursor: pointer;
+}
+
+.cell {
+    position: absolute;
+    width: 26px;
+    height: 35px;
+    border: 1px solid #e8dcb5;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.cell span {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    border-radius: 50%;
+    text-align: center;
+}
+
+.cell.rojo span { background: #b3202a; }
+.cell.negro span { background: #161616; }
+
+.cell.hit, .zero.hit {
+    background: rgba(255, 224, 138, 0.55);
+    -webkit-animation: pulse 0.6s ease-in-out 5 alternate;
+    animation: pulse 0.6s ease-in-out 5 alternate;
+}
+
+@-webkit-keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
+
+.cols {
+    position: absolute;
+    left: 342px;
+    top: 0;
+    width: 44px;
+}
+
+.colbet {
+    height: 35px;
+    border: 1px solid #e8dcb5;
+    font-size: 11px;
+    font-weight: bold;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.chipsLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.bet {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    margin: -11px 0 0 -11px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.9);
+    font-size: 8px;
+    font-weight: bold;
+    line-height: 18px;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 1px 1px #000;
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.7);
+    z-index: 5;
+}
+
+.bet.won {
+    box-shadow: 0 0 8px 3px #2ecc71;
+}
+
+.bet.lost {
+    opacity: 0.25;
+}
+
+.row {
+    position: relative;
+    display: -webkit-flex;
+    display: flex;
+    margin-top: 5px;
+    width: 386px;
+}
+
+.dozens, .simples {
+    padding-left: 30px;
+    padding-right: 44px;
+}
+
+.opt {
+    position: relative;
+    -webkit-flex: 1;
+    flex: 1;
+    height: 26px;
+    border: 1px solid #e8dcb5;
+    font-size: 11px;
+    font-weight: bold;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.opt.rojo-opt .dia, .opt.negro-opt .dia {
+    width: 18px;
+    height: 12px;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.opt.rojo-opt .dia { background: #b3202a; }
+.opt.negro-opt .dia { background: #161616; }
+
+.opt .bet {
+    left: 50%;
+    top: 50%;
+}
+
+.announced button {
+    -webkit-flex: 1;
+    flex: 1;
+    margin-right: 4px;
+    padding: 5px 2px;
+    font-size: 11px;
+    position: relative;
+}
+
+.announced button:last-child {
+    margin-right: 0;
+}
+
+.announced button.active {
+    border-color: #ffe08a;
+    box-shadow: 0 0 6px #ffe08a;
+}
+
+.announced .count {
+    position: absolute;
+    right: -4px;
+    top: -8px;
+    background: #c0392b;
+    border-radius: 8px;
+    padding: 0 5px;
+    font-size: 10px;
+    line-height: 15px;
+}
+
+.controls {
+    margin-top: 10px;
+    -webkit-align-items: center;
+    align-items: center;
+}
+
+.controls button {
+    margin-right: 5px;
+}
+
+.controls .primary {
+    margin-right: 0;
+}
+
+.status {
+    font-size: 11px;
+    color: #c9b88a;
+    margin-right: 8px;
+}
+
+.locked .grid, .locked .zero, .locked .colbet, .locked .opt {
+    cursor: default;
+}
