@@ -1,0 +1,35 @@
+{
+    "_comentario": "Modo de juego: duelos, rachas, MVP, arma bonus y recompensas. Las muertes llegan del plugin al momento (DeathMsg).",
+
+    "duel": {
+        "min": 1,
+        "max": 30000,
+        "accept_seconds": 60,
+        "_comentario": "Máximo de duelos seguidos entre el mismo par; se reinicia tras pair_reset_seconds sin duelos entre ellos.",
+        "pair_cap": 5,
+        "pair_reset_seconds": 3600
+    },
+
+    "streak": {
+        "_comentario": "Kills seguidas => URU Coins. Se acreditan al momento y se juntan en el pozo de la racha (se pierde al morir).",
+        "rewards": { "2": 5, "3": 10, "5": 20, "7": 100, "10": 200, "15": 400, "20": 1000 },
+        "_comentario_robo": "Si te matan con cuchillo, el asesino tira: [probabilidad %, fracción del pozo robada]. Las probabilidades suman 100.",
+        "knife_steal": [[5, 1.0], [10, 0.75], [20, 0.5], [25, 0.25], [40, 0.1]]
+    },
+
+    "mvp": {
+        "base": 20,
+        "multiplier": 1.025,
+        "killer_bonus": 2
+    },
+
+    "weapon_bonus": {
+        "amount": 5,
+        "weapons": ["ak47", "m4a1", "awp", "deagle", "mp5navy", "ump45", "famas", "galil", "sg552", "aug", "scout", "g3sg1",
+                    "sg550", "xm1014", "m3", "tmp", "mac10", "p90", "m249", "glock18", "usp", "p228", "elite", "fiveseven"]
+    },
+
+    "bounty": {
+        "min": 100
+    }
+}

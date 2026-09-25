@@ -71,6 +71,7 @@ final class PluginHandlers
             $s = $app->sessions->leave((int) $d['slot']);
             if ($s?->userId !== null) {
                 $app->games->closeForUser($s->userId);
+                $app->combat->onLeave($s->userId);
             }
             return [];
         });
@@ -143,6 +144,24 @@ final class PluginHandlers
                     $app->groups->onActivity($s->userId, max(0, (int) ($p['kills'] ?? 0)), max(0, (int) ($p['rounds'] ?? 0)));
                 }
             }
+            return [];
+        });
+
+        // Modo de juego: cada muerte en el momento (DeathMsg) y el inicio/fin de ronda.
+        $link->on('game.kill', function (array $d) use ($app): array {
+            $killerSlot = (int) ($d['killer'] ?? 0);
+            $victimSlot = (int) ($d['victim'] ?? 0);
+            $uid = fn (int $slot): ?int => $slot > 0 ? $app->sessions->get($slot)?->userId : null;
+            $app->combat->onKill($uid($killerSlot), $uid($victimSlot), (string) ($d['weapon'] ?? ''),
+                $killerSlot === 0 || $killerSlot === $victimSlot, (bool) ($d['teamkill'] ?? false));
+            return [];
+        });
+        $link->on('round.start', function (array $d) use ($app): array {
+            $app->combat->roundStart();
+            return [];
+        });
+        $link->on('round.end', function (array $d) use ($app): array {
+            $app->combat->roundEnd();
             return [];
         });
 

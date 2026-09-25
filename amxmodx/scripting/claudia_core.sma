@@ -939,17 +939,13 @@ handle_say(id, bool:team)
 		send_message("chat", data, KIND_FREE);
 	}
 
-	// Miembro de un grupo: el mensaje se imprime acá con el tag ([TAG]nick) en lugar del chat normal.
-	if (g_Tag[id][0])
-	{
-		print_tagged(id, team, g_SayText);
-		return PLUGIN_HANDLED;
-	}
-	return PLUGIN_CONTINUE;
+	// Todo el chat se imprime acá con el formato [Rol][TAG]Nick: mensaje.
+	print_tagged(id, team, g_SayText);
+	return PLUGIN_HANDLED;
 }
 
 /**
- * Imprime un mensaje de chat con el tag del grupo respetando las reglas del CS:
+ * Imprime un mensaje de chat con los tags (rol y grupo) respetando las reglas del CS:
  * los muertos solo le hablan a los muertos y el chat de equipo solo le llega al equipo.
  */
 print_tagged(id, bool:team, const text[])
@@ -973,7 +969,22 @@ print_tagged(id, bool:team, const text[])
 	{
 		add(prefix, charsmax(prefix), senderTeam == 1 ? "(Terrorista) " : (senderTeam == 2 ? "(Anti-Terrorista) " : "(Espectador) "));
 	}
-	formatex(g_ChatLine, charsmax(g_ChatLine), "^1%s^4[%s]^3%s^1 :  %s", prefix, g_Tag[id], g_Name[id], msg);
+	// [Rol][TAG]Nick: mensaje. Colores del chat de GoldSrc: ^1 amarillo, ^3 color del emisor, ^4 verde
+	// (el negro no existe). Owner en rojo (emisor forzado a rojo), staff en amarillo y admin en verde.
+	new role = get_role(id);
+	new sender = role == 3 ? print_team_red : id;
+	new tags[64];
+	switch (role)
+	{
+		case 3: copy(tags, charsmax(tags), "^3[Owner]");
+		case 2: copy(tags, charsmax(tags), "^1[Staff]");
+		case 1: copy(tags, charsmax(tags), "^4[Admin]");
+	}
+	if (g_Tag[id][0])
+	{
+		format(tags, charsmax(tags), "%s^4[%s]", tags, g_Tag[id]);
+	}
+	formatex(g_ChatLine, charsmax(g_ChatLine), "^1%s%s^3%s^1: %s", prefix, tags, g_Name[id], msg);
 
 	new bool:alltalk = get_cvar_num("sv_alltalk") != 0;
 	new players[MAX_PLAYERS], num;
@@ -989,7 +1000,7 @@ print_tagged(id, bool:team, const text[])
 		{
 			continue;
 		}
-		client_print_color(to, id, "%s", g_ChatLine);
+		client_print_color(to, sender, "%s", g_ChatLine);
 	}
 
 	// Mismo formato que el log del motor, para que no se pierda en los logs/estadísticas.

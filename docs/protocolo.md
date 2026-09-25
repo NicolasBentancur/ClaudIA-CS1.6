@@ -29,6 +29,8 @@ El primer mensaje tiene que ser `hello` con el secreto compartido. Si el secreto
 | `menu.input` | `slot, role, text` | - (texto escrito en `messagemode claudia_input`; vacío = cancelar) |
 | `menu.close` | `slot, role, menu` | - |
 | `stats` | `players: [{slot, kills, deaths, headshots, shots, hits, playtime, rounds}]` (deltas; `rounds` alimenta las cuotas e impuestos de los grupos) | - |
+| `game.kill` | `killer, victim, weapon, headshot, teamkill` (slots; `killer` 0 = el mundo) | - (se manda en cada DeathMsg: duelos, rachas, robo a cuchillo, MVP, arma bonus y recompensas) |
+| `round.start` / `round.end` | - | - (sortea el arma bonus / paga al MVP) |
 | `admin.coins` | `slot, admin_name, target, amount, mode (give\|take)` | `message` |
 | `admin.group` | `slot, admin_name, args` (ej. `"crear N1k PIB Los Pibes"`) | `message`, `lines[]` (detalle opcional) |
 | `admin.reload` | - | `message` |

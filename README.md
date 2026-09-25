@@ -76,7 +76,7 @@ Para ver el estado de la conexión, escribí `claudia_status` en la consola del 
 
 ## Menú
 
-`/menu` (o una tecla con `bind "F3" "claudia_menu"`) abre un menú de HUD con todo: perfil, economía y bancos, trabajo, casino, pareja y familia, grupo, tienda y más opciones. Los menús cambian según la situación del jugador (con o sin pareja, miembro o dueño de grupo, propuestas pendientes). Cuando hace falta un monto o un texto, se abre la barra para escribir.
+`/menu` (o una tecla con `bind "F3" "claudia_menu"`) abre un menú de HUD con todo: perfil, economía y bancos, trabajo, casino, combate, pareja y familia, grupo, tienda y más opciones (perfil, rankings, recordatorios). Los menús cambian según la situación del jugador (con o sin pareja, miembro o dueño de grupo, propuestas pendientes). Cuando hace falta un monto o un texto, se abre la barra para escribir.
 
 Los admins ven además **Administración** (`/admin`). Las opciones dependen del rol (ver `service/config/roles.json`):
 
@@ -104,9 +104,13 @@ Los admins ven además **Administración** (`/admin`). Las opciones dependen del
 | `/adoptar <nick>`, `/familia [nick]`, `/apellido <texto>`, `/familias`, `/emancipar`, `/desheredar <nick>` | Familia: solo los casados adoptan (máximo 4 hijos). El árbol muestra pareja, padres, hijos, hermanos, abuelos, tíos y primos. |
 | `/formarpareja`, `/besar <nick>`, `/siono <pregunta>` | Social: Claudia hace de celestina, besos y preguntas de sí o no. |
 | `/tienda`, `/comprar <objeto>`, `/inventario` | Tienda (grupo propio, anillo). |
-| `/creargrupo`, `/grupos`, `/grupo [nombre]`, `/miembros [nombre]`, `/unirse <nombre>`, `/salirg`, `/topgrupos`, `/g <mensaje>` | Grupos: el nombre, tag, descripción y privacidad se completan por chat. Los miembros hablan con `[TAG]nick`. |
+| `/creargrupo`, `/grupos`, `/grupo [nombre]`, `/miembros [nombre]`, `/unirse <nombre>`, `/salirg`, `/topgrupos`, `/g <mensaje>` | Grupos: el nombre, tag, descripción y privacidad se completan por chat. Los miembros hablan con `[TAG]Nick: mensaje`. |
 | `/solicitudes`, `/aceptarg <nick>`, `/rechazarg <nick>`, `/expulsarg <nick>`, `/traspasarg <nick>`, `/editarg ...`, `/disolver` | Dueño del grupo. |
 | `/donar <monto>`, `/fondo`, `/fondo dar <nick> <monto>` | Fondo común del grupo (cuotas cada 100 rondas, impuesto del 15% cada 300 rondas del dueño). |
+| `/duelo <nick> <monto>`, `/aceptar_duelo`, `/rechazar_duelo` | Duelo por coins (1 a 30.000; los dos tienen que tenerlos). El que mate al otro se lleva el doble. Si uno muere por otra causa se devuelve todo; si uno se va, pierde. Máximo 5 duelos seguidos por pareja (se reinicia tras 1 h sin duelos). |
+| `/racha` | Racha de kills: 2→5, 3→10, 5→20, 7→100, 10→200, 15→400, 20→1000 coins. Lo ganado va a un pozo que se pierde al morir; si te matan a cuchillo, el asesino te puede robar parte del pozo. |
+| `/mvp`, `/arma` | MVP de la ronda (más kills): 20 × 1,025^(racha−1) coins; matar al MVP anterior da +2. Arma bonus de la ronda: +5 por kill con ella. |
+| `/bounty [nick monto]` | Recompensa por la cabeza de alguien (mínimo 100, se acumulan sobre el mismo jugador, una a la vez). Se cobra matándolo a cuchillo. |
 | `/cancelar` | Cancela el formulario por chat que estés completando. |
 | `amx_darcoins <nick> <monto>`, `amx_quitarcoins <nick> <monto>`, `amx_claudia_reload` | Admin (consola). |
 | `/admingrupo <acción>` (chat, alias `/ag`) o `amx_grupo <acción>` (consola); atajos `amx_crearg <dueño> <tag> <nombre>` y `amx_borrarg <grupo>` | Admin de grupos: `crear`, `borrar`, `info`, `lista`, `renombrar`, `tag`, `desc`, `privacidad`, `dueno`, `agregar`, `expulsar`. Los admins crean gratis; al borrar, el fondo se reparte entre los miembros. |

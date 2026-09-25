@@ -58,6 +58,7 @@ public plugin_init()
 	register_plugin(PLUGIN, VERSION, AUTHOR);
 
 	register_event("DeathMsg", "ev_death", "a");
+	register_logevent("ev_round_start", 2, "1=Round_Start");
 	register_logevent("ev_round_end", 2, "1=Round_End");
 	for (new i = 0; i < sizeof WEAPONS; i++)
 	{
@@ -109,6 +110,37 @@ public ev_death()
 			g_Stats[killer][ST_HEADSHOTS]++;
 		}
 	}
+	send_kill(killer, victim, headshot);
+}
+
+/** Modo de juego (duelos, rachas, MVP, arma bonus, recompensas): el servicio decide con cada muerte al momento. */
+send_kill(killer, victim, headshot)
+{
+	if (!(1 <= victim <= MAX_PLAYERS))
+	{
+		return;
+	}
+	if (!(1 <= killer <= MAX_PLAYERS) || !is_user_connected(killer))
+	{
+		killer = 0;
+	}
+	new weapon[32];
+	read_data(4, weapon, charsmax(weapon));
+	new bool:teamkill = killer != 0 && killer != victim && is_user_connected(victim)
+		&& cs_get_user_team(killer) == cs_get_user_team(victim);
+
+	new JSON:data = json_init_object();
+	json_object_set_number(data, "killer", killer);
+	json_object_set_number(data, "victim", victim);
+	json_object_set_string(data, "weapon", weapon);
+	json_object_set_bool(data, "headshot", headshot != 0);
+	json_object_set_bool(data, "teamkill", teamkill);
+	claudia_send("game.kill", data);
+}
+
+public ev_round_start()
+{
+	claudia_send("round.start");
 }
 
 /** Fin de ronda: cuenta una ronda jugada a cada identificado que está en un equipo (cuotas de los grupos). */
@@ -125,6 +157,7 @@ public ev_round_end()
 			g_Stats[id][ST_ROUNDS]++;
 		}
 	}
+	claudia_send("round.end");
 }
 
 public fw_attack_pre(weapon)

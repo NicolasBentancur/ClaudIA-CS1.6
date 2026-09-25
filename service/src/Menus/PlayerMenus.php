@@ -40,10 +40,10 @@ final class PlayerMenus
                 $lines[0] .= ' | Rol: ' . Role::name($s->role);
             }
             $m = new Menu('Menú', $lines);
-            $m->add('Mi perfil', $this->k->cmd('perfil'));
             $m->add('Economía y bancos', fn () => $this->economy());
             $m->add('Trabajo', fn () => $this->jobs());
             $m->add('Casino', fn () => $this->casino());
+            $m->add('Combate' . ($this->app->combat->pendingFor($uid) !== null ? ' \y(duelo)' : ''), fn () => $this->combat());
             $m->add('Pareja y familia' . $this->pendingBadge($uid), fn () => $this->family());
             $m->add('Grupo' . $this->groupBadge($uid), fn () => $this->group());
             $m->add('Tienda', fn () => $this->shop());
@@ -496,10 +496,48 @@ final class PlayerMenus
         };
     }
 
+    /* ------------------------------------------------------------------
+     * Combate: duelos, racha, MVP, arma bonus y recompensas
+     * ---------------------------------------------------------------- */
+
+    public function combat(): Closure
+    {
+        return function (Session $s): Menu {
+            $uid = (int) $s->userId;
+            $cb = $this->app->combat;
+            $streak = $cb->streak($uid);
+            $m = new Menu('Combate', [
+                "Racha: {$streak['kills']} kills | Pozo: " . Text::coins($streak['pot']),
+                'Arma bonus: ' . ($cb->weapon() ?? '(al empezar la ronda)'),
+            ]);
+            $pending = $cb->pendingFor($uid);
+            if ($pending !== null) {
+                $who = $this->app->nick($pending['a']);
+                $m->add("\\yAceptar duelo de {$who} (" . Text::coins($pending['amount']) . ')', $this->k->cmdClose('aceptar_duelo'));
+                $m->add("\\yRechazar duelo de {$who}", $this->k->cmd('rechazar_duelo'));
+            }
+            if ($cb->activeDuelOf($uid) !== null) {
+                $m->disabled('Retar a un duelo', 'Ya estás en un duelo: el que mate al otro gana.');
+            } else {
+                $m->add('Retar a un duelo', fn () => $this->k->pickPlayer('Retar a...', function (Session $s, array $u) {
+                    return $this->app->menus->prompt($s, "Apuesta contra {$u['nick']} (1 a 30.000)", fn (Session $s, string $t) => $this->k->run($s, 'duelo', "{$u['nick']} {$t}"));
+                }, $this->combat(), null, false, false));
+            }
+            $m->add('Mi racha', $this->k->cmd('racha'));
+            $m->add('Mi racha de MVP', $this->k->cmd('mvp'));
+            $m->add('Recompensa activa', $this->k->cmd('bounty'));
+            $m->add('Poner una recompensa', fn () => $this->k->pickPlayer('Recompensa por...', function (Session $s, array $u) {
+                return $this->app->menus->prompt($s, "Recompensa por {$u['nick']} (mínimo 100)", fn (Session $s, string $t) => $this->k->runThen($s, 'bounty', "{$u['nick']} {$t}", $this->combat()));
+            }, $this->combat()));
+            return $m->back($this->main());
+        };
+    }
+
     public function more(): Closure
     {
         return function (): Menu {
             $m = new Menu('Más opciones');
+            $m->add('Mi perfil', $this->k->cmd('perfil'));
             $m->add('Rankings', fn () => $this->rankings());
             $m->add('Mis recordatorios', $this->k->cmd('recordatorios'));
             $m->add('Nuevo recordatorio', $this->k->ask('Cuándo y qué (ej: 2h sacar la basura, 25/12 20:00 cena)', fn (Session $s, string $t) => $this->k->run($s, 'recordar', $t)));

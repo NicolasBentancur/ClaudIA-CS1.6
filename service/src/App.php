@@ -15,7 +15,9 @@ use Claudia\Ai\Provider;
 use Claudia\Ai\RecentGames;
 use Claudia\Ai\TriggerPolicy;
 use Claudia\Auth\AuthService;
+use Claudia\Combat\CombatService;
 use Claudia\Commands\ChatFlows;
+use Claudia\Commands\CombatCommands;
 use Claudia\Commands\CommandContext;
 use Claudia\Commands\CommandRouter;
 use Claudia\Commands\EconomyCommands;
@@ -102,6 +104,7 @@ final class App
     public readonly AdminService $admin;
     public readonly MenuService $menus;
     public readonly PlayerMenus $playerMenus;
+    public readonly CombatService $combat;
 
     /** @var array<string, int> última ejecución de cada tarea periódica */
     private array $lastRun = [];
@@ -162,6 +165,7 @@ final class App
         }
 
         $this->admin = new AdminService($this);
+        $this->combat = new CombatService($this);
         $kit = new MenuKit($this);
         $this->playerMenus = new PlayerMenus($this, $kit, new AdminMenus($this, $kit));
 
@@ -296,6 +300,7 @@ final class App
         $every('games', 30, fn () => $this->games->tick());
         $every('flows', 5, fn () => $this->flows->tick(fn (int $slot) => $this->sessions->get($slot)));
         $every('proposals', 5, fn () => $this->expireProposals());
+        $every('combat', 5, fn () => $this->combat->tick());
         $every('reminders', 15, fn () => $this->reminders->tick());
         $every('loans', 60, fn () => $this->loans->tick());
         $every('promos', 60, fn () => $this->promos->tick());
@@ -328,6 +333,7 @@ final class App
     {
         $this->loans->syncBanks();
         $this->casino->refundOpenRounds();
+        $this->combat->start();
     }
 
     private function wire(): void
@@ -341,6 +347,7 @@ final class App
         GroupCommands::register($this);
         GroupAdminCommands::register($this);
         ShopCommands::register($this);
+        CombatCommands::register($this);
 
         $this->commands->register('menu', function (CommandContext $c): void {
             $this->menus->open($c->session, $this->playerMenus->main());
@@ -407,6 +414,7 @@ final class App
         });
         $this->events->on('auth.logout', function ($s): void {
             $this->games->closeForUser((int) $s->userId);
+            $this->combat->onLeave((int) $s->userId);
             $this->flows->drop($s->slot);
             $this->menus->drop($s->slot);
             $this->out->chatTag($s->slot, '');
