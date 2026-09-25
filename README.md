@@ -43,7 +43,7 @@ composer install --no-dev
 cp config/secrets.example.json config/secrets.json   # y completá las API keys
 ```
 
-1. En `config/service.json` cambiá `plugin.secret` por un secreto propio.
+1. En `config/secrets.json` poné en `plugin_secret` un secreto propio (no va en `service.json`, que se sube al repositorio).
 2. Si el servidor tiene varias IP, completá también `http.public_host` con la IP pública.
 3. Abrí hacia Internet los puertos TCP **27101** (HTTP) y **27102** (WebSocket). La ventana MOTD la abre la PC del jugador, así que tiene que poder llegar a esos puertos.
 4. El puerto **27100** queda solo para localhost.
@@ -67,7 +67,7 @@ Pasos:
 
 1. Compilá con `compilar.bat` (Windows) o `compilar.sh` (Linux, con `AMXX_DIR` o `AMXXPC`). Queda todo armado en `build/cstrike/`.
 2. Copiá el contenido de `build/cstrike/` en la carpeta `cstrike` del servidor.
-3. Editá `addons/amxmodx/configs/claudia/claudia.cfg` y poné en `claudia_secret` el mismo secreto que en `service.json`.
+3. Editá `addons/amxmodx/configs/claudia/claudia.cfg` y poné en `claudia_secret` el mismo secreto que `plugin_secret` en `secrets.json`.
 4. Verificá que en `addons/amxmodx/configs/modules.ini` estén habilitados los módulos `sockets`, `json`, `cstrike`, `fakemeta` y `hamsandwich`.
 
 `plugins-claudia.ini` se carga solo. `claudia_core` tiene que ir primero.

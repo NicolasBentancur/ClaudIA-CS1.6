@@ -32,9 +32,13 @@ $path = fn (string $p) => preg_match('#^([a-zA-Z]:)?[\\\\/]#', $p) ? $p : $base 
 Log::configure($path($config->string('service.log.file', 'logs/claudia.log')), $config->string('service.log.level', 'info'));
 Clock::setOffset($config->int('service.debug.time_offset_seconds', 0));
 
-$secret = $config->string('service.plugin.secret', '');
+// El secreto real va en secrets.json (plugin_secret) o en CLAUDIA_PLUGIN_SECRET; service.json queda de respaldo.
+$secret = App::secret($config, 'plugin_secret', 'CLAUDIA_PLUGIN_SECRET');
+if ($secret === '') {
+    $secret = $config->string('service.plugin.secret', '');
+}
 if ($secret === '' || $secret === 'CAMBIAR-ESTE-SECRETO') {
-    Log::warning('El secreto compartido con el plugin es el de ejemplo. Cambialo en config/service.json y en claudia.cfg.');
+    Log::warning('El secreto compartido con el plugin es el de ejemplo. Ponelo en config/secrets.json (plugin_secret) y en claudia.cfg.');
 }
 
 $db = new Db($path($config->string('service.database', 'data/claudia.sqlite')));

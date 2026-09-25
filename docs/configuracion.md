@@ -12,7 +12,7 @@ Las claves de los JSON que empiezan con `_` son comentarios. Después de editar 
 | cvar | por defecto | qué es |
 |---|---|---|
 | `claudia_host` / `claudia_port` | `127.0.0.1` / `27100` | Dónde escucha el servicio. |
-| `claudia_secret` | - | Secreto compartido (igual que `plugin.secret` en `service.json`). |
+| `claudia_secret` | - | Secreto compartido (igual que `plugin_secret` en `secrets.json`). |
 | `claudia_login_timeout` | `30` | Segundos para identificarse antes del kick. `0` = no expulsar. Si el servicio no responde no se expulsa a nadie. |
 | `claudia_admin_flags` | `d` | Flags del rol **admin** (alcanza con una). |
 | `claudia_staff_flags` | `m` | Flags del rol **staff**. |
@@ -34,7 +34,7 @@ Roles: jugador < admin < staff < owner. Cada rol tiene todo lo del anterior. `pe
 
 | Clave | Qué es |
 |---|---|
-| `plugin` | Puerto y secreto del socket local. |
+| `plugin` | Puerto del socket local. El secreto va en `secrets.json` (`plugin_secret`); `plugin.secret` acá es solo un respaldo. |
 | `http` / `ws` | Puertos de las páginas y del WebSocket. `public_host` vacío = usa la IP del servidor de CS. |
 | `session_resume_seconds` | Cuánto dura la sesión reanudable tras un cambio de mapa. |
 | `auth` | Largo de contraseña, intentos fallidos y bloqueo, nicks que no se pueden registrar. |
