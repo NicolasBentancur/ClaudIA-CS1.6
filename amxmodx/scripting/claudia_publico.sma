@@ -149,6 +149,8 @@ new g_Choice[MAX_PLAYERS + 1] = { -1, ... };
 new bool:g_Auto[MAX_PLAYERS + 1];
 new bool:g_ForceMenu[MAX_PLAYERS + 1];
 new Float:g_SpawnTime[MAX_PLAYERS + 1];
+// Arma del loadout que recibió en esta vida (-1 = todavía nada): el reparto completo es uno por vida.
+new g_Given[MAX_PLAYERS + 1] = { -1, ... };
 
 /* ------------------------------------------------------------------------- */
 /* Granadas                                                                  */
@@ -355,6 +357,7 @@ public plugin_end()
 public client_putinserver(id)
 {
 	g_Choice[id] = -1;
+	g_Given[id] = -1;
 	g_Auto[id] = false;
 	g_ForceMenu[id] = false;
 	g_PickOk[id] = false;
@@ -453,6 +456,7 @@ public fw_spawn_post(id)
 	{
 		return;
 	}
+	g_Given[id] = -1;
 	remove_body(id);
 	remove_task(TASK_RESPAWN + id);
 	if (is_user_bot(id))
@@ -474,7 +478,8 @@ public fw_spawn_post(id)
 public task_loadout(taskid)
 {
 	new id = taskid - TASK_LOADOUT;
-	if (!is_user_alive(id))
+	// Si ya eligió en el menú antes de este reparto automático, no se le da otro.
+	if (!is_user_alive(id) || g_Given[id] >= 0)
 	{
 		return;
 	}
@@ -527,13 +532,21 @@ public loadout_handler(id, menu, item)
 		return PLUGIN_HANDLED;
 	}
 	g_Choice[id] = item;
-	if (can_pick(id))
+	if (!can_pick(id))
+	{
+		client_print_color(id, print_team_default, "^4[Loadout]^1 Te doy ^4%s^1 la próxima vez que aparezcas.", LO_NAMES[item]);
+	}
+	else if (g_Given[id] < 0)
 	{
 		give_loadout(id, item);
 	}
-	else
+	else if (g_Given[id] == item)
 	{
-		client_print_color(id, print_team_default, "^4[Loadout]^1 Te doy ^4%s^1 la próxima vez que aparezcas.", LO_NAMES[item]);
+		client_print_color(id, print_team_default, "^4[Loadout]^1 Ya tenés la ^4%s^1.", LO_NAMES[item]);
+	}
+	else if (!swap_primary(id, item))
+	{
+		client_print_color(id, print_team_default, "^4[Loadout]^1 Para cambiar de arma tenés que tener la ^4%s^1. Te doy ^4%s^1 la próxima vez que aparezcas.", LO_NAMES[g_Given[id]], LO_NAMES[item]);
 	}
 	return PLUGIN_HANDLED;
 }
@@ -572,8 +585,10 @@ check_buyzones()
 	}
 }
 
+/** Reparto completo (uno por vida): arma, Deagle, chaleco con casco, granadas y kit para los CT. */
 give_loadout(id, idx)
 {
+	g_Given[id] = idx;
 	new bool:hasC4 = bool:user_has_weapon(id, CSW_C4);
 	strip_user_weapons(id);
 	give_item(id, "weapon_knife");
@@ -595,6 +610,49 @@ give_loadout(id, idx)
 		give_item(id, "weapon_c4");
 		cs_set_user_plant(id, 1, 1);
 	}
+}
+
+/**
+ * Cambio de arma en la misma vida: reemplaza la principal del loadout sin reponer granadas, chaleco
+ * ni Deagle. Solo si todavía la tiene: si la tiró, darle otra permitiría llenar el mapa de armas.
+ */
+bool:swap_primary(id, idx)
+{
+	if (!remove_weapon(id, LO_WEAPONS[g_Given[id]]))
+	{
+		return false;
+	}
+	g_Given[id] = idx;
+	give_item(id, LO_WEAPONS[idx]);
+	cs_set_user_bpammo(id, LO_CSW[idx], LO_BPAMMO[idx]);
+	client_print_color(id, print_team_default, "^4[Loadout]^1 Cambiaste a la ^4%s^1.", LO_NAMES[idx]);
+	return true;
+}
+
+/** Saca un arma del inventario del jugador y la borra (no queda tirada). false si no la tiene. */
+bool:remove_weapon(id, const weapon[])
+{
+	new wid = get_weaponid(weapon);
+	if (!wid || !user_has_weapon(id, wid))
+	{
+		return false;
+	}
+	new ent = find_ent_by_owner(-1, weapon, id);
+	if (!ent)
+	{
+		return false;
+	}
+	if (get_user_weapon(id) == wid)
+	{
+		ExecuteHamB(Ham_Weapon_RetireWeapon, ent);
+	}
+	if (!ExecuteHamB(Ham_RemovePlayerItem, id, ent))
+	{
+		return false;
+	}
+	ExecuteHamB(Ham_Item_Kill, ent);
+	user_has_weapon(id, wid, 0);
+	return true;
 }
 
 /* ========================================================================= */
