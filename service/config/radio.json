@@ -1,0 +1,22 @@
+{
+    "_comentario": "Radio por el chat de voz: /radio <tema o link de YouTube>. Necesita yt-dlp y ffmpeg (acá) y en el servidor de juego VoiceTranscoder + ReAPI + claudia_radio.amxx. Las rutas relativas son desde la carpeta service/.",
+    "enabled": true,
+    "_cstrike_dir": "carpeta cstrike del servidor de juego (el servicio escribe ahí los wav que reproduce VoiceTranscoder)",
+    "cstrike_dir": "../.tools/hlds_legacy/cstrike",
+    "subdir": "radio",
+    "yt_dlp": "../.tools/radio/yt-dlp.exe",
+    "ffmpeg": "../.tools/radio/ffmpeg/bin/ffmpeg.exe",
+    "max_duration": 480,
+    "max_per_player": 2,
+    "max_queue": 10,
+    "download_timeout": 180,
+    "_chunks": "el tema se parte en trozos de chunk_seconds: cortar/saltar/apagar tarda como mucho eso",
+    "chunk_seconds": 6,
+    "sample_rate": 16000,
+    "_volumen": "normalización lineal en dos pasadas (sin compresión): cada tema se lleva a target_lufs sin que el pico pase de max_peak_db",
+    "target_lufs": -18,
+    "max_peak_db": -1.5,
+    "_prefilter": "filtro previo de ffmpeg (saca graves inaudibles que el códec de voz desperdicia); vacío = ninguno",
+    "prefilter": "highpass=f=40",
+    "skip_ratio": 0.5
+}

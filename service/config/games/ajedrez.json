@@ -1,0 +1,25 @@
+{
+    "_comentario": "Ajedrez 1v1 por coins (/ajedrez <nick> <apuesta>). Mientras juegan pasan a espectador. El ganador cobra 2*apuesta menos house_rate; en tablas cada uno recupera su apuesta. Las pistas se pagan una vez y valen para toda la partida.",
+    "enabled": true,
+    "name": "Ajedrez",
+    "min_bet": 50,
+    "max_bet": 20000,
+    "time_seconds": 300,
+    "increment_seconds": 0,
+    "house_rate": 0.05,
+    "hint_price": 250,
+    "accept_seconds": 60,
+    "_abandon": "segundos con el tablero cerrado (o fuera del servidor) antes de perder por abandono",
+    "abandon_seconds": 60,
+    "draw_offers_max": 3,
+    "voice_seconds": 60,
+    "chat": { "max_chars": 120, "min_interval": 1.0 },
+    "sounds": {
+        "move": "claudia/bj_carta",
+        "capture": "claudia/bj_ficha",
+        "check": "claudia/ruleta_rebote",
+        "win": "claudia/ganar",
+        "lose": "claudia/perder",
+        "draw": "claudia/bj_empate"
+    }
+}

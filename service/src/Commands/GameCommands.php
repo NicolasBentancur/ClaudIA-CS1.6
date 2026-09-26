@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Claudia\Commands;
 
 use Claudia\App;
+use Claudia\UserError;
 use Claudia\Util\Text;
 
 /**
- * /ruleta /blackjack /chanchitos /dulce /materush /slots /casino
+ * /ruleta /blackjack /minas /chanchitos /dulce /materush /slots /casino
  */
 final class GameCommands
 {
@@ -18,12 +19,16 @@ final class GameCommands
         $sec = 'Casino';
 
         $open = fn (string $game) => function (CommandContext $c) use ($app, $game): void {
-            $c->userId();
+            $uid = $c->userId();
+            if ($app->chess->matchOf($uid) !== null) {
+                throw new UserError('Estás jugando al ajedrez. Terminá la partida (o /ajedrez volver para abrir el tablero).');
+            }
             $app->games->open($c->session, $game);
         };
 
         $r->register('ruleta', $open('ruleta'), '- ruleta francesa', $sec);
         $r->register('blackjack', $open('blackjack'), '- blackjack', $sec, true, ['bj', '21']);
+        $r->register('minas', $open('minas'), '- minas (destapá casillas sin pisar una mina)', $sec, true, ['mines', 'buscaminas']);
         $r->register('chanchitos', $open('chanchitos'), '- slot Los 3 Chanchitos del Banco', $sec, true, ['chanchos']);
         $r->register('dulce', $open('dulce'), '- slot Dulce de Leche Bonanza', $sec, true, ['bonanza']);
         $r->register('materush', $open('materush'), '- slot Mate Rush', $sec, true, ['mate', 'rush']);
@@ -33,7 +38,7 @@ final class GameCommands
         }, '- slots disponibles', $sec, false, ['tragamonedas', 'tragaperras']);
 
         $r->register('casino', function (CommandContext $c) use ($app): void {
-            $c->reply('Casino: {green}/ruleta{default}, {green}/blackjack{default} y los slots {green}/chanchitos{default}, {green}/dulce{default} y {green}/materush{default}. Apuesta de '
+            $c->reply('Casino: {green}/ruleta{default}, {green}/blackjack{default}, {green}/minas{default} y los slots {green}/chanchitos{default}, {green}/dulce{default} y {green}/materush{default}. Apuesta de '
                 . Text::coins($app->casino->minBet()) . ' a ' . Text::coins($app->casino->maxBet()) . ' URU Coins.');
         }, '- juegos disponibles', $sec, false, ['juegos']);
     }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Minas - Claudia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../comun/comun.css">
+<link rel="stylesheet" href="minas.css">
+</head>
+<body>
+<div id="stage" class="stage">
+    <div class="topbar">
+        <span class="title">Minas</span>
+        <div class="stat"><small>Saldo</small><b id="balance">-</b></div>
+        <div class="stat"><small>Apuesta</small><b id="bet">0</b></div>
+        <div class="spacer"></div>
+        <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="panel">
+        <div class="box">
+            <small>Minas</small>
+            <div class="mines-row">
+                <button id="minesDown">-</button>
+                <span class="mines-count" id="minesCount">3</span>
+                <button id="minesUp">+</button>
+            </div>
+            <div class="presets" id="presets"></div>
+        </div>
+
+        <div class="box mult">
+            <div class="mcol"><small>Actual</small><b id="multNow">x1,00</b></div>
+            <div class="mcol"><small>Siguiente</small><b id="multNext">-</b></div>
+        </div>
+
+        <div class="box win">
+            <small>Ganancia</small>
+            <b id="winAmount">0</b>
+        </div>
+
+        <div class="buttons">
+            <button id="clearBet">Borrar</button>
+            <button id="random">Al azar</button>
+        </div>
+        <button id="main" class="main">APOSTAR</button>
+    </div>
+
+    <div class="message" id="message">Elegí las minas, poné tu apuesta y jugá</div>
+
+    <div id="toast" class="toast"></div>
+    <div id="overlay" class="overlay"></div>
+</div>
+<script src="../comun/claudia.js"></script>
+<script src="minas.js"></script>
+</body>
+</html>

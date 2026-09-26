@@ -21,9 +21,9 @@
         { "provider": "gemini", "model": "gemini-3.8-flash", "timeout": 12 },
         { "provider": "gemini", "model": "gemini-3.6-flash", "timeout": 12 },
         { "provider": "gemini", "model": "gemini-3.5-flash", "timeout": 12 },
-        { "provider": "groq", "model": "llama-3.3-70b-versatile", "timeout": 12 },
         { "provider": "groq", "model": "openai/gpt-oss-120b", "timeout": 15, "extra": { "reasoning_effort": "low" } },
-        { "provider": "groq", "model": "openai/gpt-oss-20b", "timeout": 15, "extra": { "reasoning_effort": "low" } }
+        { "provider": "groq", "model": "openai/gpt-oss-20b", "timeout": 15, "extra": { "reasoning_effort": "low" } },
+        { "provider": "groq", "model": "qwen/qwen3.8-27b", "timeout": 15, "extra": { "reasoning_effort": "none" } }
     ],
 
     "gemini": {

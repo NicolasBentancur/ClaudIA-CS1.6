@@ -41,6 +41,12 @@ final class GameManager
         $this->games[$game] = ['title' => $title, 'factory' => $factory];
     }
 
+    /** Nombre del juego para mostrar (ej. en el chat). */
+    public function title(string $game): string
+    {
+        return $this->games[$game]['title'] ?? $game;
+    }
+
     public function setFallbackHost(string $host): void
     {
         if ($host !== '' && $host !== '0.0.0.0') {

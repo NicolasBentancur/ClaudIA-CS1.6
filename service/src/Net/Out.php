@@ -108,6 +108,12 @@ final class Out
         ($this->sink)('exec', ['slot' => $slot, 'cmd' => $command]);
     }
 
+    /** Evento para otro plugin de Claudia (llega por el forward claudia_event). */
+    public function event(string $type, array $data): void
+    {
+        ($this->sink)($type, $data);
+    }
+
     public function authState(int $slot, bool $registered, bool $logged): void
     {
         ($this->sink)('auth.state', ['slot' => $slot, 'registered' => $registered, 'logged' => $logged]);

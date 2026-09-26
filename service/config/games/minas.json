@@ -1,0 +1,15 @@
+{
+    "_comentario": "Minas por MOTD: tablero de 5x5. Multiplicador = rtp * producto de (25-i)/(25-minas-i) por cada casilla segura destapada.",
+    "enabled": true,
+    "name": "Minas",
+    "rtp": 0.97,
+    "min_mines": 1,
+    "max_mines": 24,
+    "default_mines": 3,
+    "sounds": {
+        "bet": "claudia/bj_ficha",
+        "gem": "claudia/slot_moneda",
+        "win": "claudia/ganar",
+        "boom": "claudia/perder"
+    }
+}

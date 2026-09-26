@@ -205,6 +205,19 @@ final class PlayerMenus
             $m = new Menu('Casino', ['Apuestas de ' . Text::coins($this->app->casino->minBet()) . ' a ' . Text::coins($this->app->casino->maxBet())]);
             $m->add('Ruleta francesa', $this->k->cmdClose('ruleta'));
             $m->add('Blackjack', $this->k->cmdClose('blackjack'));
+            $m->add('Minas', $this->k->cmdClose('minas'));
+            $uid = (int) $s->userId;
+            $pending = $this->app->chess->pendingFor($uid);
+            if ($this->app->chess->matchOf($uid) !== null) {
+                $m->add('\yAjedrez: volver al tablero', $this->k->cmdClose('ajedrez', 'volver'));
+            } elseif ($pending !== null) {
+                $m->add('\yAjedrez: aceptar a ' . $this->app->nick($pending['a']) . ' (' . Text::coins($pending['amount']) . ')', $this->k->cmdClose('ajedrez', 'aceptar'));
+                $m->add('Ajedrez: rechazar', $this->k->cmd('ajedrez', 'rechazar'));
+            } else {
+                $m->add('Ajedrez (desafiar a alguien)', fn () => $this->k->pickPlayer('Ajedrez contra...', function (Session $s, array $u) {
+                    return $this->app->menus->prompt($s, "Apuesta contra {$u['nick']}", fn (Session $s, string $t) => $this->k->run($s, 'ajedrez', "{$u['nick']} {$t}"));
+                }, $this->casino(), null, false, false));
+            }
             $m->add('Los 3 Chanchitos del Banco', $this->k->cmdClose('chanchitos'));
             $m->add('Dulce de Leche Bonanza', $this->k->cmdClose('dulce'));
             $m->add('Mate Rush', $this->k->cmdClose('materush'));

@@ -26,6 +26,9 @@ abstract class AppTestCase extends TestCase
     /** @var list<array{type:string, data:array}> */
     protected array $events = [];
 
+    protected FakeRunner $runner;
+    protected string $radioDir;
+
     protected function setUp(): void
     {
         Log::configure(null, 'error', false);
@@ -37,6 +40,10 @@ abstract class AppTestCase extends TestCase
         $this->gemini = new FakeProvider();
         $this->groq = new FakeProvider();
         $this->timers = new FakeTimers();
+        $this->runner = new FakeRunner();
+        // La radio escribe en una carpeta temporal, nunca en la del servidor de juego.
+        $this->radioDir = sys_get_temp_dir() . '/claudia-test-cstrike-' . getmypid();
+        $this->config->set('radio.cstrike_dir', $this->radioDir);
         $this->events = [];
         $this->app = new App(
             $this->config,
@@ -46,6 +53,7 @@ abstract class AppTestCase extends TestCase
             },
             ['gemini' => $this->gemini, 'groq' => $this->groq],
             $this->timers,
+            $this->runner,
         );
         $this->app->start();
     }

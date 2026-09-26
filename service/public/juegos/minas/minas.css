@@ -1,0 +1,285 @@
+/* Minas - escenario fijo de 640x440 que se escala a la ventana del MOTD (sin flexbox) */
+body {
+    background: #0e0f24;
+}
+
+.stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 640px;
+    height: 440px;
+    background: #16183a;
+    background: -webkit-radial-gradient(30% 40%, ellipse, #262a63 0%, #16183a 60%, #0e0f24 100%);
+    background: radial-gradient(ellipse at 30% 40%, #262a63 0%, #16183a 60%, #0e0f24 100%);
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    overflow: hidden;
+}
+
+.topbar {
+    border-bottom-color: #4a55c9;
+}
+
+.topbar .title {
+    color: #ffd24a;
+}
+
+/* Tablero 5x5 */
+.board {
+    position: absolute;
+    left: 24px;
+    top: 58px;
+    width: 300px;
+    height: 300px;
+    padding: 6px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+    font-size: 0;
+}
+
+.cell {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    width: 51px;
+    height: 51px;
+    margin: 3px;
+    border-radius: 9px;
+    background: #3b4bd0;
+    background: -webkit-linear-gradient(top, #5a6cf0, #3140b8);
+    background: linear-gradient(to bottom, #5a6cf0, #3140b8);
+    box-shadow: 0 4px 0 #1f2878, 0 5px 6px rgba(0, 0, 0, 0.5);
+    cursor: default;
+    text-align: center;
+    line-height: 51px;
+    font-size: 30px;
+    -webkit-transition: -webkit-transform 0.12s, background 0.15s;
+    transition: transform 0.12s, background 0.15s;
+}
+
+.board.live .cell.hidden {
+    cursor: pointer;
+}
+
+.board.live .cell.hidden:hover {
+    background: -webkit-linear-gradient(top, #7384ff, #4052d0);
+    background: linear-gradient(to bottom, #7384ff, #4052d0);
+    -webkit-transform: translateY(-2px);
+    transform: translateY(-2px);
+}
+
+.cell.open {
+    background: #1b1f4d;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
+    -webkit-transform: translateY(3px);
+    transform: translateY(3px);
+}
+
+.cell.star {
+    color: #ffd24a;
+    text-shadow: 0 0 10px rgba(255, 210, 74, 0.9);
+}
+
+.cell.mine {
+    color: #fff;
+}
+
+.cell.mine .bomb {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    margin-top: 12px;
+    border-radius: 50%;
+    background: #222;
+    background: -webkit-radial-gradient(35% 35%, circle, #666 0%, #111 70%);
+    background: radial-gradient(circle at 35% 35%, #666 0%, #111 70%);
+    box-shadow: 0 0 0 2px #e74c3c, 0 0 12px #ff5a3c;
+    vertical-align: top;
+}
+
+.cell.hit {
+    background: #b3202a;
+    background: -webkit-radial-gradient(50% 50%, circle, #ff6b4a 0%, #b3202a 70%);
+    background: radial-gradient(circle, #ff6b4a 0%, #b3202a 70%);
+}
+
+/* Al terminar se muestra el tablero entero; lo que no destapó queda atenuado. */
+.cell.ghost {
+    opacity: 0.45;
+}
+
+.cell.pop {
+    -webkit-animation: pop 0.25s ease-out;
+    animation: pop 0.25s ease-out;
+}
+
+@-webkit-keyframes pop {
+    0% { -webkit-transform: scale(0.6); }
+    70% { -webkit-transform: scale(1.12); }
+    100% { -webkit-transform: scale(1) translateY(3px); }
+}
+
+@keyframes pop {
+    0% { transform: scale(0.6); }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1) translateY(3px); }
+}
+
+/* Panel derecho */
+.panel {
+    position: absolute;
+    left: 346px;
+    top: 58px;
+    width: 272px;
+}
+
+.box {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid #333a8a;
+    border-radius: 8px;
+    padding: 7px 10px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.box small {
+    display: block;
+    font-size: 10px;
+    color: #9aa3ff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+
+.mines-row button {
+    width: 34px;
+    font-size: 16px;
+    padding: 2px 0;
+}
+
+.mines-count {
+    display: inline-block;
+    vertical-align: middle;
+    width: 60px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff6b4a;
+}
+
+.presets {
+    margin-top: 5px;
+    white-space: nowrap;
+}
+
+.presets button {
+    font-size: 11px;
+    padding: 3px 0;
+    width: 38px;
+    margin: 0 1px;
+}
+
+.presets button.on {
+    border-color: #ffd24a;
+    color: #ffd24a;
+}
+
+button {
+    background: #2a2f78;
+    background: -webkit-linear-gradient(top, #3d44a8, #242868);
+    background: linear-gradient(to bottom, #3d44a8, #242868);
+    border-color: #5c67e0;
+}
+
+button:hover {
+    border-color: #aab2ff;
+}
+
+.mult {
+    white-space: nowrap;
+    font-size: 0;
+}
+
+.mcol {
+    display: inline-block;
+    vertical-align: top;
+    width: 50%;
+    font-size: 13px;
+}
+
+.mcol b {
+    font-size: 20px;
+    color: #fff;
+}
+
+.mcol + .mcol b {
+    color: #8cf0a4;
+}
+
+.win b {
+    font-size: 22px;
+    color: #ffd24a;
+}
+
+.buttons {
+    white-space: nowrap;
+    font-size: 0;
+    margin-bottom: 8px;
+}
+
+.buttons button {
+    width: 134px;
+    margin-right: 4px;
+}
+
+.buttons button + button {
+    margin-right: 0;
+}
+
+button.main {
+    display: block;
+    width: 100%;
+    height: 48px;
+    font-size: 18px;
+    letter-spacing: 1px;
+    border-color: #6fe08d;
+    background: #1f8a4c;
+    background: -webkit-linear-gradient(top, #34c46b, #17733d);
+    background: linear-gradient(to bottom, #34c46b, #17733d);
+}
+
+button.main.cash {
+    border-color: #ffe08a;
+    background: #c77d10;
+    background: -webkit-linear-gradient(top, #f2a93b, #b36b08);
+    background: linear-gradient(to bottom, #f2a93b, #b36b08);
+    font-size: 16px;
+}
+
+.message {
+    position: absolute;
+    left: 24px;
+    top: 372px;
+    width: 300px;
+    height: 56px;
+    line-height: 18px;
+    padding-top: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #cfd4ff;
+}
+
+.message.win {
+    color: #8cf0a4;
+    font-weight: bold;
+}
+
+.message.lose {
+    color: #ff8a78;
+    font-weight: bold;
+}
+
+.toast {
+    bottom: 14px;
+}

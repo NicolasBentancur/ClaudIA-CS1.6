@@ -19,6 +19,14 @@
         "balance_fraction": 0.25
     },
 
+    "announce": {
+        "_comentario": "Avisos en el chat de todos. Gran victoria: ganancia neta >= big_win, o multiplicó la apuesta por big_win_multiplier o más (si ganó al menos multiplier_min_net). Gran pérdida: perdió big_loss o más en una sola ronda. 0 desactiva cada regla.",
+        "big_win": 5000,
+        "big_win_multiplier": 20,
+        "multiplier_min_net": 1000,
+        "big_loss": 5000
+    },
+
     "clearing": {
         "_comentario": "Días de atraso para entrar al Clearing y porcentaje de las ganancias de los juegos que se confisca mientras esté adentro.",
         "days_overdue": 5,

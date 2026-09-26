@@ -17,7 +17,9 @@ use Claudia\Ai\TriggerPolicy;
 use Claudia\Auth\AuthService;
 use Claudia\Combat\CombatService;
 use Claudia\Commands\ChatFlows;
+use Claudia\Commands\ChessCommands;
 use Claudia\Commands\CombatCommands;
+use Claudia\Commands\RadioCommands;
 use Claudia\Commands\CommandContext;
 use Claudia\Commands\CommandRouter;
 use Claudia\Commands\EconomyCommands;
@@ -35,7 +37,13 @@ use Claudia\Economy\Wallet;
 use Claudia\Games\Blackjack\BlackjackGame;
 use Claudia\Games\Casino;
 use Claudia\Games\GameManager;
+use Claudia\Games\Chess\ChessGame;
+use Claudia\Games\Chess\ChessService;
+use Claudia\Radio\ProcessRunner;
+use Claudia\Radio\ProcRunner;
+use Claudia\Radio\RadioService;
 use Claudia\Games\GameSession;
+use Claudia\Games\Mines\MinesGame;
 use Claudia\Games\Roulette\BallPhysics;
 use Claudia\Games\Roulette\RouletteGame;
 use Claudia\Games\Slots\SlotFactory;
@@ -105,6 +113,8 @@ final class App
     public readonly MenuService $menus;
     public readonly PlayerMenus $playerMenus;
     public readonly CombatService $combat;
+    public readonly ChessService $chess;
+    public readonly RadioService $radio;
 
     /** @var array<string, int> última ejecución de cada tarea periódica */
     private array $lastRun = [];
@@ -119,6 +129,7 @@ final class App
         callable $sink,
         ?array $providers = null,
         ?Timers $timers = null,
+        ?ProcessRunner $runner = null,
     ) {
         $this->events = new Events();
         $this->out = new Out($sink, $config->string('service.chat_tag', '{green}[Claudia]{default} '));
@@ -160,12 +171,16 @@ final class App
         $this->games = new GameManager($config, $this->out, $this->sessions, $timers ?? new Timers());
         $this->games->register('ruleta', 'Ruleta', fn (GameSession $s) => new RouletteGame($config, $this->games, $this->casino, $this->wallet, new BallPhysics()));
         $this->games->register('blackjack', 'Blackjack', fn (GameSession $s) => new BlackjackGame($config, $this->games, $this->casino, $this->wallet));
+        $this->games->register('minas', 'Minas', fn (GameSession $s) => new MinesGame($config, $this->games, $this->casino, $this->wallet));
         foreach (array_keys(SlotFactory::GAMES) as $slot) {
             $this->games->register($slot, $config->string("games.{$slot}.name", $slot), fn (GameSession $s) => new SlotGame($slot, $config, $this->games, $this->casino, $this->wallet));
         }
 
         $this->admin = new AdminService($this);
         $this->combat = new CombatService($this);
+        $this->chess = new ChessService($this);
+        $this->radio = new RadioService($this, $runner ?? new ProcRunner());
+        $this->games->register('ajedrez', 'Ajedrez', fn (GameSession $s) => new ChessGame($this->chess));
         $kit = new MenuKit($this);
         $this->playerMenus = new PlayerMenus($this, $kit, new AdminMenus($this, $kit));
 
@@ -301,6 +316,8 @@ final class App
         $every('flows', 5, fn () => $this->flows->tick(fn (int $slot) => $this->sessions->get($slot)));
         $every('proposals', 5, fn () => $this->expireProposals());
         $every('combat', 5, fn () => $this->combat->tick());
+        $every('chess', 1, fn () => $this->chess->tick());
+        $every('radio', 1, fn () => $this->radio->tick());
         $every('reminders', 15, fn () => $this->reminders->tick());
         $every('loans', 60, fn () => $this->loans->tick());
         $every('promos', 60, fn () => $this->promos->tick());
@@ -334,6 +351,7 @@ final class App
         $this->loans->syncBanks();
         $this->casino->refundOpenRounds();
         $this->combat->start();
+        $this->radio->start();
     }
 
     private function wire(): void
@@ -348,6 +366,8 @@ final class App
         GroupAdminCommands::register($this);
         ShopCommands::register($this);
         CombatCommands::register($this);
+        ChessCommands::register($this);
+        RadioCommands::register($this);
 
         $this->commands->register('menu', function (CommandContext $c): void {
             $this->menus->open($c->session, $this->playerMenus->main());
@@ -409,15 +429,43 @@ final class App
             $this->out->authState($s->slot, true, true);
             $onLogin($s);
         });
+        $this->events->on('auth.login', function ($s, bool $isNew): void {
+            if ($isNew) {
+                $this->out->chat(Out::ALL, '{green}' . $this->users->displayName((int) $s->userId) . '{default} se registró por primera vez. ¡Bienvenido al servidor!');
+            }
+        });
+        $this->events->on('game.finished', function (int $uid, string $game, int $bet, int $payout, int $net): void {
+            $this->announceGame($uid, $game, $bet, $net);
+        });
         $this->events->on('auth.resumed', function ($s) use ($onLogin): void {
             $onLogin($s);
         });
         $this->events->on('auth.logout', function ($s): void {
             $this->games->closeForUser((int) $s->userId);
             $this->combat->onLeave((int) $s->userId);
+            $this->chess->onLeave((int) $s->userId);
             $this->flows->drop($s->slot);
             $this->menus->drop($s->slot);
             $this->out->chatTag($s->slot, '');
         });
+    }
+
+    /** Avisa en el chat de todos las ganancias y pérdidas grandes del casino (config economy.announce). */
+    private function announceGame(int $uid, string $game, int $bet, int $net): void
+    {
+        $cfg = $this->config->array('economy.announce');
+        $bigWin = (int) ($cfg['big_win'] ?? 5000);
+        $multiplier = (float) ($cfg['big_win_multiplier'] ?? 20);
+        $minNet = (int) ($cfg['multiplier_min_net'] ?? 1000);
+        $bigLoss = (int) ($cfg['big_loss'] ?? 5000);
+        $name = $this->users->displayName($uid);
+        $title = $this->games->title($game);
+        if ($net > 0 && (($bigWin > 0 && $net >= $bigWin)
+            || ($multiplier > 0 && $bet > 0 && $net >= $minNet && ($net + $bet) >= $bet * $multiplier))) {
+            $x = $bet > 0 ? ' (x' . rtrim(rtrim(number_format(($net + $bet) / $bet, 2, ',', ''), '0'), ',') . ')' : '';
+            $this->out->chat(Out::ALL, "{green}¡Gran victoria!{default} {$name} ganó {green}" . Text::coins($net) . " URU Coins{default} en {$title}{$x}.");
+        } elseif ($net < 0 && $bigLoss > 0 && -$net >= $bigLoss) {
+            $this->out->chat(Out::ALL, "{green}¡Qué golpe!{default} {$name} perdió " . Text::coins(-$net) . " URU Coins en {$title}.");
+        }
     }
 }

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ajedrez - Claudia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../comun/comun.css">
+<link rel="stylesheet" href="ajedrez.css">
+</head>
+<body>
+<div id="stage" class="stage">
+    <div class="pbar top" id="barTop">
+        <span class="swatch" id="swTop"></span><span class="pname" id="nameTop">-</span>
+        <span class="clock" id="clockTop">5:00</span>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="pbar bottom" id="barBottom">
+        <span class="swatch" id="swBottom"></span><span class="pname" id="nameBottom">-</span>
+        <span class="clock" id="clockBottom">5:00</span>
+    </div>
+
+    <div class="side">
+        <div class="head">
+            <div class="hcol"><small>Pozo</small><b id="prize">-</b></div>
+            <div class="hcol"><small>Tu saldo</small><b id="balance">-</b></div>
+        </div>
+        <div class="moves" id="moves"></div>
+        <div class="chat">
+            <div class="log" id="chatLog"></div>
+            <div class="drawbar" id="drawBar">
+                <span>Tu rival ofrece tablas</span>
+                <button id="drawYes">Aceptar</button><button id="drawNo">Rechazar</button>
+            </div>
+            <div class="quick" id="quick"></div>
+            <input id="chatInput" maxlength="120" placeholder="Escribí y apretá Enter">
+        </div>
+        <div class="buttons">
+            <button id="mic" class="mic"><span class="led"></span>Micrófono</button>
+            <button id="hint">Pistas</button>
+        </div>
+        <div class="buttons">
+            <button id="draw">½ Tablas</button>
+            <button id="resign" class="danger">Rendirse</button>
+        </div>
+    </div>
+
+    <div class="modal" id="promo">
+        <div class="box">
+            <p>Coronar como:</p>
+            <div class="choices" id="promoChoices"></div>
+        </div>
+    </div>
+    <div class="modal" id="confirm">
+        <div class="box">
+            <p id="confirmText">¿Seguro?</p>
+            <button id="confirmYes" class="danger">Sí, me rindo</button>
+            <button id="confirmNo">No</button>
+        </div>
+    </div>
+    <div class="modal" id="result">
+        <div class="box result">
+            <h2 id="resultTitle">-</h2>
+            <p id="resultText">-</p>
+            <p class="net" id="resultNet"></p>
+            <button id="resultClose">Ver el tablero</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="overlay" class="overlay"></div>
+</div>
+<script src="../comun/claudia.js"></script>
+<script src="ajedrez.js"></script>
+</body>
+</html>

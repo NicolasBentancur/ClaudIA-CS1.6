@@ -110,6 +110,167 @@
                 { "name": "Mayordomo", "salary": 650, "bonus": { "chance": 0.16, "min": 120, "max": 400 } }
             ],
             "fire": { "performance_below": 0.15, "chance": 0.35 }
+        },
+        "delivery": {
+            "name": "Repartidor",
+            "description": "Llevar pedidos en moto. Sin requisitos, sueldo bajo y muchas propinas.",
+            "requirements": {},
+            "employers": {
+                "app": { "name": "App de delivery", "description": "Cobrás por pedido: el sueldo es poco pero las propinas vuelan.", "salary_multiplier": 0.8, "bonus_multiplier": 1.8, "promotion_multiplier": 1.1, "fire_multiplier": 1.3 },
+                "pizzeria": { "name": "Pizzería del barrio", "description": "Sueldo fijo y el dueño te banca.", "salary_multiplier": 1.1, "bonus_multiplier": 0.9, "promotion_multiplier": 0.9, "fire_multiplier": 0.6 }
+            },
+            "levels": [
+                { "name": "Repartidor en bici", "salary": 140, "bonus": { "chance": 0.30, "min": 20, "max": 120 }, "promote": { "min_days": 2, "min_performance": 0.55 } },
+                { "name": "Repartidor en moto", "salary": 240, "bonus": { "chance": 0.32, "min": 40, "max": 180 }, "promote": { "min_days": 5, "min_performance": 0.65 } },
+                { "name": "Coordinador de pedidos", "salary": 400, "bonus": { "chance": 0.25, "min": 80, "max": 250 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.40 }
+        },
+        "parrillero": {
+            "name": "Parrillero",
+            "description": "El fuego, la carne y la paciencia. Paga en propinas y en asado.",
+            "requirements": {},
+            "employers": {
+                "puerto": { "name": "Parrillada del Puerto", "description": "Mucho turista: propinas grandes, jefe exigente.", "salary_multiplier": 1.1, "bonus_multiplier": 1.4, "promotion_multiplier": 1.0, "fire_multiplier": 1.2 },
+                "carrito": { "name": "Carrito de chivitos", "description": "Chico y familiar, nadie te apura.", "salary_multiplier": 0.9, "bonus_multiplier": 1.0, "promotion_multiplier": 1.1, "fire_multiplier": 0.5 }
+            },
+            "levels": [
+                { "name": "Ayudante de cocina", "salary": 180, "bonus": { "chance": 0.15, "min": 30, "max": 100 }, "promote": { "min_days": 3, "min_performance": 0.55 } },
+                { "name": "Parrillero", "salary": 300, "bonus": { "chance": 0.20, "min": 50, "max": 180 }, "promote": { "min_days": 6, "min_performance": 0.65 } },
+                { "name": "Asador", "salary": 480, "bonus": { "chance": 0.22, "min": 80, "max": 300 }, "promote": { "min_days": 10, "min_performance": 0.75 } },
+                { "name": "Dueño de la parrillada", "salary": 750, "bonus": { "chance": 0.25, "min": 150, "max": 550 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.35 }
+        },
+        "docente": {
+            "name": "Docente",
+            "description": "Enseñar a los gurises. Casi nunca te echan, pero los ascensos son por antigüedad.",
+            "requirements": { "min_playtime_hours": 5 },
+            "employers": {
+                "escuela": { "name": "Escuela pública", "description": "Estabilidad total, sueldo justo.", "salary_multiplier": 1.0, "bonus_multiplier": 0.5, "promotion_multiplier": 0.8, "fire_multiplier": 0.1 },
+                "colegio": { "name": "Colegio privado", "description": "Paga más, pero los padres se quejan de todo.", "salary_multiplier": 1.25, "bonus_multiplier": 0.8, "promotion_multiplier": 1.0, "fire_multiplier": 0.8 }
+            },
+            "levels": [
+                { "name": "Suplente", "salary": 280, "bonus": { "chance": 0.05, "min": 50, "max": 100 }, "promote": { "min_days": 4, "min_performance": 0.50 } },
+                { "name": "Maestro", "salary": 420, "bonus": { "chance": 0.06, "min": 60, "max": 150 }, "promote": { "min_days": 8, "min_performance": 0.55 } },
+                { "name": "Maestro efectivo", "salary": 580, "bonus": { "chance": 0.07, "min": 80, "max": 200 }, "promote": { "min_days": 14, "min_performance": 0.60 } },
+                { "name": "Director", "salary": 850, "bonus": { "chance": 0.08, "min": 150, "max": 400 } }
+            ],
+            "fire": { "performance_below": 0.10, "chance": 0.20 }
+        },
+        "bombero": {
+            "name": "Bombero",
+            "description": "Apagar incendios y bajar gatos de los árboles. Hace falta sangre fría.",
+            "requirements": { "min_kills": 10 },
+            "employers": {
+                "nacional": { "name": "Dirección Nacional de Bomberos", "description": "Estable y con buenos ascensos.", "salary_multiplier": 1.0, "bonus_multiplier": 0.9, "promotion_multiplier": 1.0, "fire_multiplier": 0.5 },
+                "voluntarios": { "name": "Bomberos voluntarios", "description": "Menos sueldo, más reconocimiento (y bonus).", "salary_multiplier": 0.75, "bonus_multiplier": 1.6, "promotion_multiplier": 1.2, "fire_multiplier": 0.7 }
+            },
+            "levels": [
+                { "name": "Aspirante", "salary": 260, "bonus": { "chance": 0.10, "min": 50, "max": 150 }, "promote": { "min_days": 3, "min_performance": 0.60 } },
+                { "name": "Bombero", "salary": 420, "bonus": { "chance": 0.12, "min": 80, "max": 250 }, "promote": { "min_days": 6, "min_performance": 0.70 } },
+                { "name": "Cabo bombero", "salary": 620, "bonus": { "chance": 0.14, "min": 120, "max": 380 }, "promote": { "min_days": 9, "min_performance": 0.75 } },
+                { "name": "Jefe de destacamento", "salary": 950, "bonus": { "chance": 0.16, "min": 200, "max": 700 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.35 }
+        },
+        "camionero": {
+            "name": "Camionero",
+            "description": "Rutas nacionales, mate y cumbia. Pide horas de juego encima.",
+            "requirements": { "min_playtime_hours": 8 },
+            "employers": {
+                "transportista": { "name": "Empresa transportista", "description": "Sueldo fijo y camión de la empresa.", "salary_multiplier": 1.0, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 0.9 },
+                "cooperativa": { "name": "Cooperativa de fleteros", "description": "Se reparte entre todos: menos fijo, más bonus.", "salary_multiplier": 0.85, "bonus_multiplier": 1.5, "promotion_multiplier": 0.9, "fire_multiplier": 0.5 }
+            },
+            "levels": [
+                { "name": "Acompañante", "salary": 230, "bonus": { "chance": 0.12, "min": 40, "max": 140 }, "promote": { "min_days": 3, "min_performance": 0.60 } },
+                { "name": "Chofer de camión", "salary": 400, "bonus": { "chance": 0.15, "min": 70, "max": 250 }, "promote": { "min_days": 7, "min_performance": 0.70 } },
+                { "name": "Chofer de larga distancia", "salary": 620, "bonus": { "chance": 0.18, "min": 120, "max": 400 }, "promote": { "min_days": 12, "min_performance": 0.78 } },
+                { "name": "Dueño del camión", "salary": 950, "bonus": { "chance": 0.22, "min": 200, "max": 750 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.40 }
+        },
+        "locutor": {
+            "name": "Locutor de radio",
+            "description": "Hablar por los codos al aire. Sin requisitos, y en streaming los bonus pueden ser enormes.",
+            "requirements": {},
+            "employers": {
+                "am": { "name": "Radio AM del pueblo", "description": "Clásica y tranquila, nadie te echa.", "salary_multiplier": 1.0, "bonus_multiplier": 0.8, "promotion_multiplier": 0.9, "fire_multiplier": 0.4 },
+                "streaming": { "name": "Canal de streaming", "description": "Si pegás un clip viral, bonus enorme.", "salary_multiplier": 0.75, "bonus_multiplier": 2.0, "promotion_multiplier": 1.3, "fire_multiplier": 1.4 }
+            },
+            "levels": [
+                { "name": "Pasante de radio", "salary": 170, "bonus": { "chance": 0.12, "min": 30, "max": 120 }, "promote": { "min_days": 3, "min_performance": 0.55 } },
+                { "name": "Movilero", "salary": 320, "bonus": { "chance": 0.15, "min": 60, "max": 220 }, "promote": { "min_days": 6, "min_performance": 0.65 } },
+                { "name": "Conductor", "salary": 550, "bonus": { "chance": 0.18, "min": 100, "max": 400 }, "promote": { "min_days": 10, "min_performance": 0.75 } },
+                { "name": "La voz del pueblo", "salary": 900, "bonus": { "chance": 0.20, "min": 200, "max": 800 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.35 }
+        },
+        "futbolista": {
+            "name": "Futbolista",
+            "description": "De la cancha del barrio a la selección. Hay que meter kills (goles) y te echan si no rendís.",
+            "requirements": { "min_kills": 50 },
+            "employers": {
+                "barrio": { "name": "Club de barrio", "description": "Te bancan aunque juegues mal.", "salary_multiplier": 0.8, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 0.6 },
+                "grande": { "name": "Club grande de la capital", "description": "Sueldos de primera, hinchada exigente.", "salary_multiplier": 1.4, "bonus_multiplier": 1.3, "promotion_multiplier": 0.9, "fire_multiplier": 1.6 }
+            },
+            "levels": [
+                { "name": "Juveniles", "salary": 220, "bonus": { "chance": 0.15, "min": 50, "max": 200 }, "promote": { "min_days": 3, "min_performance": 0.65 } },
+                { "name": "Suplente", "salary": 420, "bonus": { "chance": 0.16, "min": 80, "max": 350 }, "promote": { "min_days": 6, "min_performance": 0.72 } },
+                { "name": "Titular", "salary": 800, "bonus": { "chance": 0.18, "min": 150, "max": 700 }, "promote": { "min_days": 10, "min_performance": 0.80 } },
+                { "name": "Capitán", "salary": 1300, "bonus": { "chance": 0.20, "min": 300, "max": 1200 }, "promote": { "min_days": 15, "min_performance": 0.88 } },
+                { "name": "Crack de la selección", "salary": 2200, "bonus": { "chance": 0.22, "min": 600, "max": 2500 } }
+            ],
+            "fire": { "performance_below": 0.30, "chance": 0.50 }
+        },
+        "medico": {
+            "name": "Médico",
+            "description": "Carrera larga: pide muchas horas jugadas, pero arriba paga como pocos.",
+            "requirements": { "min_playtime_hours": 15 },
+            "employers": {
+                "hospital": { "name": "Hospital público", "description": "Guardias eternas, trabajo seguro.", "salary_multiplier": 1.0, "bonus_multiplier": 0.7, "promotion_multiplier": 0.9, "fire_multiplier": 0.3 },
+                "mutualista": { "name": "Mutualista", "description": "Mejor sueldo y bonus por productividad.", "salary_multiplier": 1.2, "bonus_multiplier": 1.2, "promotion_multiplier": 1.0, "fire_multiplier": 0.9 }
+            },
+            "levels": [
+                { "name": "Estudiante de medicina", "salary": 300, "bonus": { "chance": 0.08, "min": 50, "max": 150 }, "promote": { "min_days": 5, "min_performance": 0.60 } },
+                { "name": "Residente", "salary": 550, "bonus": { "chance": 0.10, "min": 100, "max": 300 }, "promote": { "min_days": 8, "min_performance": 0.68 } },
+                { "name": "Médico de guardia", "salary": 900, "bonus": { "chance": 0.12, "min": 150, "max": 500 }, "promote": { "min_days": 12, "min_performance": 0.75 } },
+                { "name": "Especialista", "salary": 1400, "bonus": { "chance": 0.14, "min": 250, "max": 900 }, "promote": { "min_days": 18, "min_performance": 0.82 } },
+                { "name": "Jefe de servicio", "salary": 2000, "bonus": { "chance": 0.16, "min": 400, "max": 1500 } }
+            ],
+            "fire": { "performance_below": 0.15, "chance": 0.25 }
+        },
+        "abogado": {
+            "name": "Abogado",
+            "description": "Pleitos, escritos y mucha labia. Hace falta experiencia en el servidor.",
+            "requirements": { "min_playtime_hours": 20 },
+            "employers": {
+                "estudio": { "name": "Estudio jurídico grande", "description": "Buen sueldo, competencia feroz.", "salary_multiplier": 1.15, "bonus_multiplier": 1.0, "promotion_multiplier": 0.9, "fire_multiplier": 1.2 },
+                "cuenta_propia": { "name": "Por cuenta propia", "description": "Poco fijo, pero cada caso ganado es plata.", "salary_multiplier": 0.7, "bonus_multiplier": 2.0, "promotion_multiplier": 1.2, "fire_multiplier": 0.5 }
+            },
+            "levels": [
+                { "name": "Procurador", "salary": 350, "bonus": { "chance": 0.10, "min": 60, "max": 200 }, "promote": { "min_days": 5, "min_performance": 0.62 } },
+                { "name": "Abogado junior", "salary": 650, "bonus": { "chance": 0.12, "min": 120, "max": 400 }, "promote": { "min_days": 9, "min_performance": 0.70 } },
+                { "name": "Abogado", "salary": 1000, "bonus": { "chance": 0.14, "min": 200, "max": 700 }, "promote": { "min_days": 14, "min_performance": 0.78 } },
+                { "name": "Socio del estudio", "salary": 1600, "bonus": { "chance": 0.16, "min": 350, "max": 1300 } }
+            ],
+            "fire": { "performance_below": 0.20, "chance": 0.35 }
+        },
+        "streamer": {
+            "name": "Streamer",
+            "description": "Jugar y transmitir. El sueldo es chico y la plata viene de golpe: todo o nada.",
+            "requirements": { "min_kills": 30 },
+            "employers": {
+                "plataforma": { "name": "Plataforma de streaming", "description": "Suscriptores fijos, crecimiento lento.", "salary_multiplier": 1.0, "bonus_multiplier": 1.0, "promotion_multiplier": 1.0, "fire_multiplier": 0.8 },
+                "sponsor": { "name": "Sponsor de energizantes", "description": "Paga fortunas si rendís; si no, te bajan.", "salary_multiplier": 1.3, "bonus_multiplier": 1.5, "promotion_multiplier": 1.1, "fire_multiplier": 1.8 }
+            },
+            "levels": [
+                { "name": "Streamer novato", "salary": 100, "bonus": { "chance": 0.30, "min": 50, "max": 400 }, "promote": { "min_days": 3, "min_performance": 0.65 } },
+                { "name": "Streamer en crecimiento", "salary": 220, "bonus": { "chance": 0.30, "min": 100, "max": 700 }, "promote": { "min_days": 7, "min_performance": 0.72 } },
+                { "name": "Partner", "salary": 450, "bonus": { "chance": 0.30, "min": 200, "max": 1200 }, "promote": { "min_days": 12, "min_performance": 0.80 } },
+                { "name": "Estrella de internet", "salary": 800, "bonus": { "chance": 0.30, "min": 400, "max": 2500 } }
+            ],
+            "fire": { "performance_below": 0.30, "chance": 0.45 }
         }
     }
 }

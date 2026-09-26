@@ -72,6 +72,7 @@ final class PluginHandlers
             if ($s?->userId !== null) {
                 $app->games->closeForUser($s->userId);
                 $app->combat->onLeave($s->userId);
+                $app->chess->onLeave($s->userId);
             }
             return [];
         });
@@ -158,6 +159,10 @@ final class PluginHandlers
         });
         $link->on('round.start', function (array $d) use ($app): array {
             $app->combat->roundStart();
+            return [];
+        });
+        $link->on('radio.done', function (array $d) use ($app): array {
+            $app->radio->done((int) ($d['id'] ?? 0));
             return [];
         });
         $link->on('round.end', function (array $d) use ($app): array {

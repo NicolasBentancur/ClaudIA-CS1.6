@@ -93,6 +93,10 @@ public claudia_auth_changed(id, bool:registered, bool:logged)
 
 public ev_death()
 {
+	if (warmup())
+	{
+		return;
+	}
 	new killer = read_data(1);
 	new victim = read_data(2);
 	new headshot = read_data(3);
@@ -140,12 +144,20 @@ send_kill(killer, victim, headshot)
 
 public ev_round_start()
 {
+	if (warmup())
+	{
+		return;
+	}
 	claudia_send("round.start");
 }
 
 /** Fin de ronda: cuenta una ronda jugada a cada identificado que está en un equipo (cuotas de los grupos). */
 public ev_round_end()
 {
+	if (warmup())
+	{
+		return;
+	}
 	new players[MAX_PLAYERS], num;
 	get_players(players, num, "ch");
 	for (new i = 0; i < num; i++)
@@ -255,6 +267,13 @@ send_batch(only)
 	json_object_set_value(data, "players", list);
 	json_free(list);
 	claudia_send("stats", data);
+}
+
+/** Calentamiento de claudia_publico: no cuenta para las stats ni para el modo de juego. */
+bool:warmup()
+{
+	new p = get_cvar_pointer("cp_warmup_active");
+	return p != 0 && get_pcvar_num(p) != 0;
 }
 
 bool:tracked(id)

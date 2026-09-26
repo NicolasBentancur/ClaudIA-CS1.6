@@ -13,10 +13,10 @@ for %%I in ("%AMXXPC%") do set AMXXINC=%%~dpIinclude
 
 set OUT=build\cstrike
 if exist "%OUT%" rmdir /s /q "%OUT%"
-mkdir "%OUT%\addons\amxmodx\plugins" "%OUT%\addons\amxmodx\configs\claudia" "%OUT%\addons\amxmodx\data\lang" "%OUT%\addons\amxmodx\scripting\include" "%OUT%\sound\claudia"
+mkdir "%OUT%\addons\amxmodx\plugins" "%OUT%\addons\amxmodx\configs\claudia" "%OUT%\addons\amxmodx\data\lang" "%OUT%\addons\amxmodx\scripting\include" "%OUT%\sound\claudia\anuncios" "%OUT%\sprites\claudia"
 
 set FAIL=0
-for %%P in (claudia_core claudia_auth claudia_stats claudia_admin) do (
+for %%P in (claudia_publico claudia_core claudia_auth claudia_stats claudia_admin claudia_ajedrez claudia_radio) do (
     echo == %%P
     "%AMXXPC%" "amxmodx\scripting\%%P.sma" -i"%AMXXINC%" -i"amxmodx\scripting\include" -o"%OUT%\addons\amxmodx\plugins\%%P.amxx" || set FAIL=1
 )
@@ -27,6 +27,8 @@ copy /y amxmodx\data\lang\claudia.txt "%OUT%\addons\amxmodx\data\lang\" >nul
 copy /y amxmodx\scripting\*.sma "%OUT%\addons\amxmodx\scripting\" >nul
 copy /y amxmodx\scripting\include\claudia.inc "%OUT%\addons\amxmodx\scripting\include\" >nul
 copy /y sound\claudia\*.wav "%OUT%\sound\claudia\" >nul
+copy /y sound\claudia\anuncios\*.wav "%OUT%\sound\claudia\anuncios\" >nul
+copy /y sprites\claudia\*.spr "%OUT%\sprites\claudia\" >nul
 
 if "%FAIL%"=="1" (
     echo Hubo errores de compilacion.

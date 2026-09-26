@@ -6,11 +6,14 @@
  * También se acepta "/login clave" o "/registrar clave" en el chat: se bloquea antes de que
  * se publique.
  *
- * El jugador que no se identifica en claudia_login_timeout segundos es expulsado. Si el servicio
- * de Claudia no está disponible no se expulsa a nadie.
+ * El jugador que no se identifica en claudia_login_timeout segundos es expulsado, y mientras no se
+ * identifique no puede entrar a ningún equipo. Si el servicio de Claudia no está disponible no se
+ * expulsa ni se bloquea a nadie.
  */
 
 #include <amxmodx>
+#include <cstrike>
+#include <fakemeta>
 #include <claudia>
 
 #pragma semicolon 1
@@ -43,6 +46,13 @@ public plugin_init()
 	register_clcmd("claudia_confirmar", "cmd_confirm_input");
 	register_clcmd("claudia_clave_actual", "cmd_old_input");
 	register_clcmd("claudia_clave_nueva", "cmd_new_input");
+
+	// Sin login no se entra a un equipo.
+	register_clcmd("jointeam", "cmd_team");
+	register_clcmd("chooseteam", "cmd_team");
+	register_clcmd("menuselect", "cmd_menuselect");
+	register_message(get_user_msgid("ShowMenu"), "msg_show_menu");
+	register_message(get_user_msgid("VGUIMenu"), "msg_vgui_menu");
 
 	g_HudSync = CreateHudSyncObj();
 }
@@ -241,6 +251,7 @@ public claudia_auth_changed(id, bool:registered, bool:logged)
 	{
 		stop_countdown(id);
 		ClearSyncHud(id, g_HudSync);
+		open_team_menu(id);
 	}
 	else
 	{
@@ -256,6 +267,7 @@ public claudia_connection_changed(bool:connected)
 		for (new id = 1; id <= MAX_PLAYERS; id++)
 		{
 			stop_countdown(id);
+			open_team_menu(id);
 		}
 	}
 }
@@ -319,6 +331,71 @@ show_hud(id)
 {
 	set_hudmessage(255, 190, 0, -1.0, 0.28, 0, 0.0, 1.1, 0.0, 0.0, -1);
 	ShowSyncHudMsg(id, g_HudSync, "%L", id, g_IsRegistered[id] ? "CLAUDIA_HUD_LOGIN" : "CLAUDIA_HUD_REGISTER", g_Remaining[id]);
+}
+
+/* =========================================================================
+ * Equipos: sin login no se juega
+ * ========================================================================= */
+
+/** No identificado con el servicio andando (los bots y el HLTV no cuentan). */
+bool:locked(id)
+{
+	return is_user_connected(id) && !is_user_bot(id) && !is_user_hltv(id) && claudia_connected() && !claudia_is_logged(id);
+}
+
+public cmd_team(id)
+{
+	if (locked(id))
+	{
+		tell(id, "CLAUDIA_TEAM_LOCKED");
+		return PLUGIN_HANDLED;
+	}
+	return PLUGIN_CONTINUE;
+}
+
+/** El menú de equipos/modelos del juego se contesta con menuselect aunque no se haya mostrado. */
+public cmd_menuselect(id)
+{
+	if (locked(id))
+	{
+		new menu = get_ent_data(id, "CBasePlayer", "m_iMenu");
+		if (menu == 1 || menu == 2 || menu == 3)   // Menu_ChooseTeam, Menu_IGChooseTeam, Menu_ChooseAppearance
+		{
+			tell(id, "CLAUDIA_TEAM_LOCKED");
+			return PLUGIN_HANDLED;
+		}
+	}
+	return PLUGIN_CONTINUE;
+}
+
+public msg_show_menu(msgid, dest, id)
+{
+	new text[32];
+	get_msg_arg_string(4, text, charsmax(text));
+	if (contain(text, "Team_Select") != -1 && locked(id))
+	{
+		return PLUGIN_HANDLED;
+	}
+	return PLUGIN_CONTINUE;
+}
+
+public msg_vgui_menu(msgid, dest, id)
+{
+	new menu = get_msg_arg_int(1);
+	if ((menu == 2 || menu == 26 || menu == 27) && locked(id))   // equipos, modelos T, modelos CT
+	{
+		return PLUGIN_HANDLED;
+	}
+	return PLUGIN_CONTINUE;
+}
+
+/** Recién identificado (o se cayó el servicio): si todavía no eligió equipo, se le abre el menú. */
+open_team_menu(id)
+{
+	if (is_user_connected(id) && !is_user_bot(id) && cs_get_user_team(id) == CS_TEAM_UNASSIGNED)
+	{
+		client_cmd(id, "chooseteam");
+	}
 }
 
 /* =========================================================================

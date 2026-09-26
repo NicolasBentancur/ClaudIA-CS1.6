@@ -1,0 +1,510 @@
+/* Ajedrez - escenario fijo de 640x440 (sin flexbox: el MOTD usa un Chromium viejo) */
+body {
+    background: #262421;
+}
+
+.stage {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 640px;
+    height: 440px;
+    background: #312e2b;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    overflow: hidden;
+}
+
+button {
+    background: #3c3a37;
+    background: -webkit-linear-gradient(top, #4a4744, #33312e);
+    background: linear-gradient(to bottom, #4a4744, #33312e);
+    border: 1px solid #56534f;
+    color: #e8e6e3;
+    text-shadow: none;
+}
+
+button:hover {
+    border-color: #8b8987;
+}
+
+button.danger {
+    background: #7a2c22;
+    background: -webkit-linear-gradient(top, #a33a2c, #6e271e);
+    background: linear-gradient(to bottom, #a33a2c, #6e271e);
+    border-color: #c4574a;
+}
+
+/* Barras de jugador */
+.pbar {
+    position: absolute;
+    left: 10px;
+    width: 384px;
+    height: 24px;
+    line-height: 24px;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: bold;
+    color: #e8e6e3;
+}
+
+.pbar.top {
+    top: 3px;
+}
+
+.pbar.bottom {
+    top: 413px;
+}
+
+.swatch {
+    display: inline-block;
+    vertical-align: middle;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border-radius: 3px;
+    border: 1px solid #000;
+}
+
+.swatch.w {
+    background: #f0f0f0;
+}
+
+.swatch.b {
+    background: #1d1d1d;
+    border-color: #777;
+}
+
+.pname {
+    vertical-align: middle;
+}
+
+.pbar.turn .pname {
+    color: #fff;
+}
+
+.clock {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 24px;
+    min-width: 70px;
+    padding: 0 8px;
+    border-radius: 3px;
+    background: #262421;
+    color: #8b8987;
+    text-align: right;
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 17px;
+}
+
+.pbar.turn .clock {
+    background: #f0f0f0;
+    color: #111;
+}
+
+.pbar.turn .clock.low {
+    background: #c33;
+    color: #fff;
+}
+
+/* Tablero: 8x8 casillas de 48 px */
+.board {
+    position: absolute;
+    left: 10px;
+    top: 28px;
+    width: 384px;
+    height: 384px;
+    font-size: 0;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+}
+
+.sq {
+    position: relative;
+    display: inline-block;
+    vertical-align: top;
+    width: 48px;
+    height: 48px;
+    text-align: center;
+    cursor: default;
+}
+
+.sq.light {
+    background: #ebecd0;
+}
+
+.sq.dark {
+    background: #779556;
+}
+
+.sq.last.light {
+    background: #f5f682;
+}
+
+.sq.last.dark {
+    background: #b9ca43;
+}
+
+.sq.sel.light,
+.sq.sel.dark {
+    background: #f7ec5a;
+}
+
+.sq.check {
+    background: #e63b3b;
+    background: -webkit-radial-gradient(50% 50%, circle, #ff3a3a 0%, #e63b3b 40%, rgba(230, 59, 59, 0.3) 75%);
+    background: radial-gradient(circle, #ff3a3a 0%, #e63b3b 40%, rgba(230, 59, 59, 0.3) 75%);
+}
+
+.board.mine .sq.own,
+.board.mine .sq.target {
+    cursor: pointer;
+}
+
+/* Piezas: símbolos Unicode rellenos, blancas con contorno oscuro */
+.pc {
+    position: relative;
+    z-index: 2;
+    display: block;
+    height: 48px;
+    line-height: 48px;
+    font-family: 'Segoe UI Symbol', 'DejaVu Sans', 'Arial Unicode MS', 'Lucida Sans Unicode', serif;
+    font-size: 40px;
+}
+
+.pc.w {
+    color: #fdfdfd;
+    text-shadow: 1px 0 0 #222, -1px 0 0 #222, 0 1px 0 #222, 0 -1px 0 #222, 1px 1px 0 #222, -1px -1px 0 #222, 1px -1px 0 #222, -1px 1px 0 #222, 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+.pc.b {
+    color: #1c1b1a;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35), 0 2px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Coordenadas */
+.coord {
+    position: absolute;
+    z-index: 1;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 10px;
+}
+
+.coord.rank {
+    left: 2px;
+    top: 2px;
+}
+
+.coord.file {
+    right: 3px;
+    bottom: 2px;
+}
+
+.sq.light .coord {
+    color: #779556;
+}
+
+.sq.dark .coord {
+    color: #ebecd0;
+}
+
+/* Pistas: punto en casillas libres, anillo en capturas */
+.dot {
+    position: absolute;
+    z-index: 3;
+    left: 17px;
+    top: 17px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.ring {
+    position: absolute;
+    z-index: 3;
+    left: 1px;
+    top: 1px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 4px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Panel derecho */
+.side {
+    position: absolute;
+    left: 404px;
+    top: 3px;
+    width: 228px;
+    height: 434px;
+}
+
+.head {
+    height: 38px;
+    background: #262421;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 0;
+    margin-bottom: 5px;
+}
+
+.hcol {
+    display: inline-block;
+    vertical-align: top;
+    width: 50%;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.hcol small {
+    display: block;
+    font-size: 9px;
+    color: #8b8987;
+    text-transform: uppercase;
+}
+
+.hcol b {
+    color: #81b64c;
+    font-size: 15px;
+}
+
+.hcol + .hcol b {
+    color: #e8e6e3;
+}
+
+.moves {
+    height: 84px;
+    overflow-y: auto;
+    background: #262421;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 12px;
+    color: #c3c2c1;
+    margin-bottom: 5px;
+}
+
+.moves .mv {
+    display: inline-block;
+    width: 66px;
+    line-height: 17px;
+}
+
+.moves .num {
+    display: inline-block;
+    width: 24px;
+    color: #8b8987;
+    line-height: 17px;
+}
+
+.moves .mv.cur {
+    color: #fff;
+    font-weight: bold;
+}
+
+.chat {
+    position: relative;
+    height: 216px;
+    background: #262421;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.log {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 144px;
+    overflow-y: auto;
+    padding: 4px 6px;
+    font-size: 12px;
+    line-height: 15px;
+    word-wrap: break-word;
+}
+
+.log .ln {
+    margin-bottom: 2px;
+}
+
+.log .ln b {
+    color: #81b64c;
+}
+
+.log .ln.own b {
+    color: #7fa6e0;
+}
+
+.log .ln.sys {
+    color: #a7a6a2;
+    font-style: italic;
+}
+
+.drawbar {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 118px;
+    padding: 3px 6px;
+    background: #4a4744;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.drawbar.show {
+    display: block;
+}
+
+.drawbar button {
+    font-size: 10px;
+    padding: 2px 5px;
+    margin-left: 4px;
+}
+
+.quick {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 147px;
+    white-space: normal;
+    font-size: 0;
+}
+
+.quick button {
+    font-size: 10px;
+    padding: 2px 5px;
+    margin: 0 3px 3px 0;
+}
+
+.chat input {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    width: 220px;
+    height: 22px;
+    border: 1px solid #56534f;
+    border-radius: 3px;
+    background: #1d1c1a;
+    color: #e8e6e3;
+    padding: 0 6px;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.buttons {
+    white-space: nowrap;
+    font-size: 0;
+    margin-bottom: 5px;
+}
+
+.buttons button {
+    width: 111px;
+    height: 30px;
+    margin-right: 6px;
+    font-size: 12px;
+}
+
+.buttons button + button {
+    margin-right: 0;
+}
+
+button.mic .led {
+    display: inline-block;
+    vertical-align: middle;
+    width: 9px;
+    height: 9px;
+    margin: -2px 6px 0 0;
+    border-radius: 50%;
+    background: #6b6966;
+}
+
+button.mic.on {
+    border-color: #e04b3b;
+    color: #fff;
+}
+
+button.mic.on .led {
+    background: #ff4433;
+    box-shadow: 0 0 6px #ff4433;
+}
+
+button.hinted {
+    border-color: #81b64c;
+    color: #b6e08c;
+}
+
+/* Ventanas */
+.modal {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 640px;
+    height: 440px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 60;
+    text-align: center;
+}
+
+.modal.show {
+    display: block;
+}
+
+.modal .box {
+    display: inline-block;
+    margin-top: 130px;
+    min-width: 260px;
+    padding: 14px 18px;
+    background: #312e2b;
+    border: 1px solid #56534f;
+    border-radius: 6px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7);
+}
+
+.modal .box p {
+    margin: 0 0 10px;
+    font-size: 14px;
+}
+
+.choices .pc {
+    display: inline-block;
+    width: 52px;
+    height: 52px;
+    line-height: 52px;
+    margin: 0 3px;
+    border-radius: 4px;
+    background: #ebecd0;
+    cursor: pointer;
+    font-size: 42px;
+}
+
+.choices .pc:hover {
+    background: #f7ec5a;
+}
+
+.box.result h2 {
+    margin: 0 0 6px;
+    font-size: 24px;
+    color: #fff;
+}
+
+.box.result .net {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.net.win {
+    color: #81b64c;
+}
+
+.net.lose {
+    color: #e0584a;
+}
+
+.toast {
+    bottom: 50px;
+    border-color: #56534f;
+}

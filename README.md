@@ -1,6 +1,6 @@
 # Claudia
 
-Plugin de Counter-Strike 1.6 (AMX Mod X 1.10 + ReHLDS) con una IA de personalidad uruguaya en el chat, cuentas con contraseña, economía en URU Coins (bancos, préstamos y Clearing), trabajos, perfiles, rankings, recordatorios y un casino (ruleta francesa y blackjack) que se juega en la ventana MOTD.
+Plugin de Counter-Strike 1.6 (AMX Mod X 1.10 + ReHLDS) con una IA de personalidad uruguaya en el chat, cuentas con contraseña, economía en URU Coins (bancos, préstamos y Clearing), trabajos, perfiles, rankings, recordatorios y un casino (ruleta francesa, blackjack, minas y slots) y ajedrez 1 contra 1 por apuesta que se juegan en la ventana MOTD.
 
 ```
  CS 1.6 (ReHLDS)                     Misma PC                            Nube
@@ -26,7 +26,7 @@ sound/claudia/            sonidos .wav (generados con service/tools/gen_sounds.p
 service/bin/claudia.php   punto de entrada del servicio
 service/config/           JSON de configuración por categoría + personality.md
 service/src/              código (Ai, Auth, Economy, Jobs, Games, ...)
-service/public/juegos/    páginas MOTD (ruleta, blackjack)
+service/public/juegos/    páginas MOTD (ruleta, blackjack, minas, slots, ajedrez)
 service/tests/            PHPUnit
 docs/                     protocolo y configuración
 ```
@@ -68,9 +68,10 @@ Pasos:
 1. Compilá con `compilar.bat` (Windows) o `compilar.sh` (Linux, con `AMXX_DIR` o `AMXXPC`). Queda todo armado en `build/cstrike/`.
 2. Copiá el contenido de `build/cstrike/` en la carpeta `cstrike` del servidor.
 3. Editá `addons/amxmodx/configs/claudia/claudia.cfg` y poné en `claudia_secret` el mismo secreto que `plugin_secret` en `secrets.json`.
-4. Verificá que en `addons/amxmodx/configs/modules.ini` estén habilitados los módulos `sockets`, `json`, `cstrike`, `fakemeta` y `hamsandwich`.
+4. Verificá que en `addons/amxmodx/configs/modules.ini` estén habilitados los módulos `sockets`, `json`, `cstrike`, `fakemeta`, `hamsandwich`, `fun` y `engine`.
+5. En `addons/amxmodx/configs/plugins.ini` comentá (con `;`) `scrollmsg.amxx`, `imessage.amxx` y `adminhelp.amxx` (los mensajes de "This server is using AMX Mod X" / "Welcome to...") y `mapchooser.amxx` (la votación de mapa la hace `claudia_publico`).
 
-`plugins-claudia.ini` se carga solo. `claudia_core` tiene que ir primero.
+`plugins-claudia.ini` se carga solo. `claudia_publico` va primero (no depende del resto) y después `claudia_core`.
 
 Para ver el estado de la conexión, escribí `claudia_status` en la consola del servidor.
 
@@ -83,6 +84,43 @@ Los admins ven además **Administración** (`/admin`). Las opciones dependen del
 - **admin:** jugadores (perfil, borrar apodo, sacar de un grupo), grupos (ver, editar, agregar y sacar miembros), anuncios de Claudia y el menú de AMX Mod X.
 - **staff:** todo lo anterior, más el perfil completo, dar/quitar coins (hasta 10.000 por vez), borrar la memoria de la IA, crear y eliminar grupos, cambiar dueños y silenciar a Claudia.
 - **owner:** todo, más contraseñas temporales, perdonar deudas, activar promociones, recargar la configuración y ver el estado del servicio.
+
+## Servidor público (claudia_publico)
+
+Funciona aunque el servicio esté caído. Se configura en `configs/claudia/publico.cfg` (rondas y cvars `cp_*`) y `configs/claudia/mapas.ini` (mapas de la votación).
+
+- **Loadouts:** al aparecer se abre un menú con AK-47, M4A1, AWP, Famas, Galil, Scout o MP5, siempre con Deagle, chaleco y casco, HE, 2 flashes y humo (y kit de desactivación para los CT). "Darme siempre el mismo" lo da solo cada ronda. `/loadout` (o `/armas`, `/guns`) lo vuelve a abrir; el arma solo se puede cambiar sin haber salido de la zona de compra (si no, queda para la ronda siguiente).
+- **Rondas:** tiempos competitivos (1:45 de ronda, bomba de 35 s, 15 s de compra, $800) con freezetime 0; mapa de 30 minutos.
+- **Mapa:** votación 3 minutos antes del final (5 mapas, sin repetir los últimos 3, más "Extender" hasta 2 veces). `rtv` / `/rtv` con el 60% de los jugadores cambia de mapa enseguida.
+- **Bomba:** los segundos que quedan se muestran a los dos equipos (a los CT: "Apurate a desactivar la bomba, quedan N segundos"; a los T: "Defendé la bomba") y cuenta regresiva hablada de 10 a 1. A los T que quedan vivos, a los 20 segundos del final: "Apurate a plantar la bomba, dale".
+- **Sonidos** (en `sound/claudia/anuncios/`; si falta alguno se omite): prepare to fight al empezar la ronda, primera sangre, humillación a cuchillo, double/multi/mega/ultra/monster kill, rachas de 3/5/7/10/15/20 kills (killing spree, rampage, dominating, unstoppable, godlike, wicked sick), headshot (solo para el que lo hizo) y flawless victory cuando un equipo gana sin perder a nadie. Cada jugador apaga o prende los sonidos de muertes con `/sonidos` (se recuerda por nick).
+- **Calentamiento:** 1 minuto (`cp_warmup_time`) desde que entra el primer jugador en cada mapa; se revive al instante y las kills no cuentan para las stats ni para el modo de juego de Claudia. Al terminar se reinicia la ronda.
+- **Daño:** debajo de la mira, el daño hecho en azul y el recibido en rojo, sin tope (un AWP muestra todo el daño, no 100). Al morir (o al empezar la ronda siguiente, si sobreviviste) se muestran tus víctimas con daño, impactos y tu precisión, y tus atacantes.
+- **Revivir:** sobre el cuerpo de cada compañero muerto hay un cartel "REVIVIR" (solo lo ve su equipo). Manteniendo **E** 5 segundos al lado del cuerpo se lo revive ahí mismo, con el menú de armas. Tamaño y altura del cartel: `cp_revive_scale` y `cp_revive_height`.
+- **Voz:** `sv_alltalk 1`, terroristas y anti se escuchan entre sí.
+- **HUD:** cada tipo de mensaje tiene su fila (calentamiento, anuncios de kills, bomba, aviso de plantar, fin de ronda, resumen, daño) y los anuncios de kills salen de a uno, con su sonido, en cola.
+- **Granadas:** el aviso por radio sale como `[HE]` (rojo), `[SG]` (verde) o `[FB]` (gris) + nick + mensaje; cada granada deja una estela de ese color que ven todos, y las flashes de los compañeros no ciegan.
+
+Sin iniciar sesión no se puede entrar a ningún equipo (ni por menú ni por consola); al identificarse se abre el menú de equipos. Si el servicio está caído no se bloquea a nadie.
+
+## Ajedrez (claudia_ajedrez)
+
+- **Desafío:** `/ajedrez <nick> <apuesta>` (o Casino → Ajedrez en el menú). Al desafiado le aparece un menú para aceptar o rechazar (60 s). Al aceptar se retiene la apuesta de los dos y pasan a **espectador** hasta que termina la partida.
+- **Partida:** 5 minutos por jugador, reglas completas (enroque, captura al paso, coronación, tablas por ahogado, repetición, 50 movimientos y material insuficiente). El tablero se abre en el MOTD; si lo cerrás, `/ajedrez volver`. Con el tablero cerrado más de 60 s, o saliendo del servidor, se pierde por abandono.
+- **Pago:** el ganador se lleva el pozo (2 × apuesta) menos el 5 % de la casa; en tablas cada uno recupera su apuesta. Si el servicio se reinicia en medio de una partida, se devuelven las apuestas.
+- **Pistas:** se pagan una vez (250) y valen para toda la partida: al elegir una pieza se marcan sus movimientos. El rival ve en el chat que las compraste.
+- **Chat** al lado del tablero (con frases rápidas), **micrófono** (el botón le activa la voz del juego, `+voicerecord`, al propio jugador; se apaga solo a los 60 s) con **voz privada** entre los dos, **tablas** y **rendirse**.
+- Todo se ajusta en `config/games/ajedrez.json`.
+
+## Radio (claudia_radio)
+
+Música por el chat de voz, pedida por los jugadores.
+
+- `/radio <nombre o link de YouTube>` encola un tema (máximo 2 por jugador, 10 en la cola, 8 minutos por tema). `/radio cola`, `/radio sacar <n>`, `/radio saltar` (el que lo pidió o el staff lo cortan; el resto vota, hace falta la mitad) y `/radio on` / `/radio off` para escucharla o no (por defecto la escuchan todos; se recuerda por nick).
+- El servicio baja el audio con **yt-dlp**, **ffmpeg** lo normaliza y lo convierte a wav mono de 16 kHz en trozos de 6 s dentro de `cstrike/radio/`, y el plugin los pasa por la voz con **VoiceTranscoder** (vía **ReAPI**). Cortar, saltar o apagar tarda como mucho un trozo.
+- Instalación en el servidor de juego: `addons/VoiceTranscoder/` (con su línea en `addons/metamod/plugins.ini`), `reapi_amxx.dll` en `addons/amxmodx/modules/` y `claudia_radio.amxx`. Para compilar hacen falta los `.inc` de ReAPI en la carpeta `include` del compilador.
+- En el servicio: rutas de yt-dlp, ffmpeg y de la carpeta `cstrike` del juego en `config/radio.json` (el servicio y el juego tienen que estar en la misma máquina, o compartir esa carpeta).
+- La música de YouTube tiene derechos de autor: pasarla en un servidor público es responsabilidad de quien lo administra.
 
 ## Comandos
 
@@ -97,7 +135,9 @@ Los admins ven además **Administración** (`/admin`). Las opciones dependen del
 | `/bancos`, `/banco <id>`, `/prestamo <banco> <monto> <días>`, `/deuda`, `/pagar <banco\|todo> [monto]`, `/promos` | Bancos, préstamos y Clearing. |
 | `/trabajos`, `/empleadores <trabajo>`, `/postular <trabajo> <empleador>`, `/trabajo`, `/cobrar`, `/renunciar` | Trabajos. |
 | `/cumple DD/MM`, `/recordar <30m\|2h\|1d\|DD/MM [HH:MM]> <texto>`, `/recordatorios`, `/borrarrecordatorio <n>` | Recordatorios. |
-| `/ruleta`, `/blackjack`, `/casino` | Casino (MOTD). |
+| `/radio <tema o link>` | Pedir un tema en la radio (`cola`, `saltar`, `sacar <n>`, `on`, `off`). |
+| `/ajedrez <nick> <apuesta>` | Desafiar al ajedrez (`aceptar`, `rechazar`, `volver`). |
+| `/ruleta`, `/blackjack`, `/minas`, `/casino` | Casino (MOTD). Las ganancias y pérdidas grandes se anuncian en el chat (`economy.json` → `announce`). |
 | `/chanchitos`, `/dulce`, `/materush`, `/slots` | Slots (MOTD): Los 3 Chanchitos del Banco, Dulce de Leche Bonanza y Mate Rush. |
 | `/pareja <nick>`, `/aceptar`, `/rechazar`, `/mipareja [nick]`, `/terminar`, `/ex [nick]` | Parejas (una a la vez; se guardan las últimas 5 ex). |
 | `/casarse`, `/si`, `/no` | Casamiento (hace falta un anillo de la tienda). `/si` y `/no` también responden adopciones. |
