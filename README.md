@@ -1,6 +1,12 @@
 # Claudia
 
+![Bender entrando por una puerta, con el texto «ClaudIA llegando al grupo»](assets/banner.jpg)
+
+[![CI](https://github.com/NicolasBentancur/ClaudIA-CS1.6/actions/workflows/ci.yml/badge.svg)](https://github.com/NicolasBentancur/ClaudIA-CS1.6/actions/workflows/ci.yml)
+
 Plugin de Counter-Strike 1.6 (AMX Mod X 1.10 + ReHLDS) con una IA de personalidad uruguaya en el chat, cuentas con contraseña, economía en URU Coins (bancos, préstamos y Clearing), trabajos, perfiles, rankings, recordatorios y un casino (ruleta francesa, blackjack, minas y slots) y ajedrez 1 contra 1 por apuesta que se juegan en la ventana MOTD.
+
+[@carlosplanchon](https://github.com/carlosplanchon) ayudó en el hardening.
 
 ```
  CS 1.6 (ReHLDS)                     Misma PC                            Nube
@@ -29,6 +35,7 @@ service/src/              código (Ai, Auth, Economy, Jobs, Games, ...)
 service/public/juegos/    páginas MOTD (ruleta, blackjack, minas, slots, ajedrez)
 service/tests/            PHPUnit
 docs/                     protocolo y configuración
+assets/                   imágenes del README
 ```
 
 ## Instalación
@@ -169,3 +176,25 @@ En GitHub, cada push y pull request corre los tests (PHP 8.2 y 8.5) y compila lo
 Para probar el servicio sin el juego está `tools/fake_plugin.php`, un cliente que habla el mismo protocolo que el plugin. Ejemplo: `php tools/fake_plugin.php --script=guion.txt`.
 
 Más detalle en [docs/configuracion.md](docs/configuracion.md) y [docs/protocolo.md](docs/protocolo.md).
+
+## Claudia
+
+<p align="center">
+  <img src="assets/claudia-solaire.jpg" height="250" alt="Bender como Solaire de Dark Souls, con los brazos en alto al sol">
+  <img src="assets/claudia-leyendo.jpg" height="250" alt="Bender leyendo un papel frente a una multitud">
+  <img src="assets/claudia-sagrado-corazon.jpg" height="250" alt="Bender como la estampa del Sagrado Corazón">
+</p>
+
+<p align="center"><sub>Imágenes por <a href="https://github.com/TheShrekMaster">@TheShrekMaster</a>.</sub></p>
+
+Y esta es la foto de perfil de Claudia en WhatsApp, en [ClaudIA](https://github.com/gauchitodev/ClaudIA):
+
+<p align="center">
+  <img src="assets/profile_picture_claudia.jpg" height="250" alt="Retrato de una mujer de pelo corto hecha de código verde brillante, estilo Matrix, dentro de un círculo sobre un fondo de caracteres que caen">
+</p>
+
+Las imágenes de `assets/` en las que aparece Bender, de *Futurama*, incluido el banner, las hizo [@TheShrekMaster](https://github.com/TheShrekMaster). No forman parte del código del proyecto: los derechos de las imágenes son de su autor y los del personaje, de sus respectivos propietarios.
+
+## Related Projects
+
+- [ClaudIA](https://github.com/gauchitodev/ClaudIA), de [@gauchitodev](https://github.com/gauchitodev): bot de WhatsApp con personalidad uruguaya, hecho a medida para un grupo de amigos. ClaudIA-CS1.6 está basada conceptualmente en ese proyecto, y las imágenes de este README vienen de ahí.
