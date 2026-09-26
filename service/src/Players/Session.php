@@ -17,12 +17,17 @@ final class Session
     /** Rol en el servidor (Role::USER..OWNER), lo actualiza el plugin en cada mensaje. */
     public int $role = Role::USER;
 
+    /**
+     * @param int $connId #userid del motor: identifica la conexión y se conserva en el cambio de
+     *                    mapa, pero cambia si el jugador sale y vuelve a entrar (0 = el plugin no lo mandó)
+     */
     public function __construct(
         public readonly int $slot,
         public string $nick,
         public readonly string $ip,
         public readonly string $authid,
         public readonly int $joinedAt,
+        public readonly int $connId = 0,
     ) {
     }
 

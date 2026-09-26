@@ -51,16 +51,16 @@ final class PluginHandlers
             $slot = (int) $d['slot'];
             $nick = (string) $d['nick'];
             $ip = (string) ($d['ip'] ?? '');
-            $s = $app->sessions->join($slot, $nick, $ip, (string) ($d['authid'] ?? ''));
+            $conn = (int) ($d['userid'] ?? 0);
+            $s = $app->sessions->join($slot, $nick, $ip, (string) ($d['authid'] ?? ''), $conn);
             $s->role = $roleOf($d);
             $s->registered = $app->auth->isRegistered($nick);
-            $resumeId = $app->sessions->takeResume($nick, $ip);
-            if ($resumeId === null && ($d['was_logged'] ?? false) && $s->registered) {
-                // El plugin nos dice que ya estaba logueado (el servicio se reinició).
-                $resumeId = (int) $app->users->findByNick($nick)['id'];
-            }
+            $resumeId = $app->sessions->takeResume($nick, $ip, $conn);
             if ($resumeId !== null) {
                 $app->auth->resume($s, $resumeId);
+            } elseif (($d['was_logged'] ?? false) && $s->registered) {
+                // El plugin nos dice que ya estaba logueado (el servicio se reinició).
+                $app->auth->resumeAfterRestart($s);
             }
             return ['registered' => $s->registered, 'logged' => $s->logged()];
         });

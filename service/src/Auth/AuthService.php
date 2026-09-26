@@ -90,6 +90,20 @@ final class AuthService
         return true;
     }
 
+    /**
+     * Si el servicio se reinició, el plugin avisa quién ya estaba logueado (was_logged). Solo se le
+     * cree si el jugador entra desde la IP con la que se logueó esa cuenta la última vez: un aviso
+     * viejo (por ejemplo, alguien que se cambió al nick de otro) no alcanza para entrar a una cuenta ajena.
+     */
+    public function resumeAfterRestart(Session $s): bool
+    {
+        $user = $this->users->findByNick($s->nick);
+        if ($user === null || (string) ($user['last_ip'] ?? '') !== $s->ip) {
+            return false;
+        }
+        return $this->resume($s, (int) $user['id']);
+    }
+
     public function changePassword(Session $s, string $old, string $new): void
     {
         if (!$s->logged()) {

@@ -17,7 +17,7 @@ El primer mensaje tiene que ser `hello` con el secreto compartido. Si el secreto
 | type | data | respuesta |
 |---|---|---|
 | `hello` | `secret, version, ip, map, server` | `version, commands[]` (lista de comandos de chat que el plugin tiene que reenviar) |
-| `player.join` | `slot, nick, ip, authid, was_logged, role` | `registered, logged` |
+| `player.join` | `slot, nick, ip, authid, userid, was_logged, role` (`userid` = #userid del motor) | `registered, logged` |
 | `player.leave` | `slot` | - |
 | `player.rename` | `slot, nick` | `registered, logged` (siempre sin login) |
 | `auth.register` / `auth.login` | `slot, password` | `registered, logged` o error |
@@ -52,9 +52,9 @@ El primer mensaje tiene que ser `hello` con el secreto compartido. Si el secreto
 
 ## Reconexión y cambio de mapa
 
-En cada cambio de mapa el plugin se recarga y se vuelve a conectar. El servicio recuerda durante `session_resume_seconds` el nick y la IP de cada jugador logueado, así que al volver no tiene que identificarse de nuevo.
+En cada cambio de mapa el plugin se recarga y se vuelve a conectar. El servicio recuerda durante `session_resume_seconds` el nick, la IP y el `userid` de cada jugador logueado, así que al volver no tiene que identificarse de nuevo. El `userid` del motor se conserva en el cambio de mapa pero cambia si el jugador sale y vuelve a entrar: así, otro que entra con el mismo nick desde la misma IP (cíber, NAT) no se queda con la sesión.
 
-Si el que se reinicia es el servicio, el plugin manda `was_logged: true` para restaurar la sesión.
+Si el que se reinicia es el servicio, el plugin manda `was_logged: true` para restaurar la sesión, y el servicio solo le cree si el jugador entra desde la IP con la que se logueó esa cuenta. Al cambiar de nick, el plugin deja de considerarlo logueado en el acto.
 
 ## Juegos (MOTD)
 

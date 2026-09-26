@@ -564,6 +564,8 @@ send_join(id)
 	json_object_set_string(data, "nick", g_Name[id]);
 	json_object_set_string(data, "ip", ip);
 	json_object_set_string(data, "authid", authid);
+	// #userid del motor: se conserva en el cambio de mapa y el servicio lo exige para reanudar la sesión.
+	json_object_set_number(data, "userid", get_user_userid(id));
 	json_object_set_bool(data, "was_logged", g_Logged[id]);
 	json_object_set_number(data, "role", get_role(id));
 	if (send_message("player.join", data, KIND_JOIN, -1, id) >= 0)
@@ -848,6 +850,12 @@ public client_infochanged(id)
 	}
 	copy(g_Name[id], charsmax(g_Name[]), newname);
 	new bool:wasLogged = g_Logged[id];
+	// Cambiar de nick cierra la sesión. Se limpia ya y no al llegar la respuesta: si el servicio está
+	// caído o no contesta, un was_logged viejo en el próximo player.join lo reanudaría en la cuenta del
+	// nick nuevo.
+	g_Logged[id] = false;
+	g_Tag[id][0] = EOS;
+	g_Capture[id] = false;
 	if (g_Joined[id])
 	{
 		new JSON:data = json_init_object();
