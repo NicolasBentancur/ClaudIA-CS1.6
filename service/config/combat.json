@@ -1,5 +1,5 @@
 {
-    "_comentario": "Modo de juego: duelos, rachas, MVP, arma bonus y recompensas. Las muertes llegan del plugin al momento (DeathMsg).",
+    "_comentario": "Modo de juego: duelos, rachas, MVP, arma bonus y recompensas. Las muertes llegan del plugin al momento (DeathMsg). Solo pagan las muertes de jugadores identificados (los bots no cuentan).",
 
     "duel": {
         "min": 1,
@@ -18,8 +18,10 @@
     },
 
     "mvp": {
+        "_comentario": "Premio por ronda: base × multiplier^(racha de MVP − 1), hasta max (0 = sin tope).",
         "base": 20,
         "multiplier": 1.025,
+        "max": 100,
         "killer_bonus": 2
     },
 

@@ -96,6 +96,7 @@ Efectos posibles:
 - **Por nivel:** `salary`, `bonus {chance, min, max}` y `promote {min_days, min_performance}`.
 - **Rendimiento:** mezcla la actividad desde el último cobro con azar. Se configura en `performance`: `weights` define los pesos de minutos jugados, kills y mensajes, `target_activity` la actividad que cuenta como completa y `random_weight` cuánto pesa el azar.
 - **Reingreso:** si te echan o renunciás y volvés al mismo trabajo, entrás `rehire_level_penalty` o `resign_level_penalty` niveles por debajo del que tenías.
+- **Cobro:** `/cobrar` anda una vez cada `claim_cooldown_hours` (24) por jugador; renunciar y entrar a otro trabajo no reinicia la espera.
 
 ## games/ruleta.json y games/blackjack.json
 
@@ -122,11 +123,11 @@ Parejas, casamientos, adopciones y familias.
 
 ## combat.json
 
-Modo de juego (duelos, rachas, MVP, arma bonus y recompensas).
+Modo de juego (duelos, rachas, MVP, arma bonus y recompensas). Solo pagan las muertes de jugadores identificados: matar bots no suma a la racha, al MVP ni al arma bonus.
 
 - `duel`: `min`/`max` de la apuesta, `accept_seconds` para aceptar, `pair_cap` (5) duelos seguidos por pareja y `pair_reset_seconds` (3600) sin duelos para reiniciar el contador. Las apuestas en juego se guardan en la base: si el servicio se reinicia, se devuelven.
 - `streak.rewards`: kills seguidas → coins (se acreditan al momento y se suman al pozo de la racha). `streak.knife_steal`: tabla `[probabilidad %, fracción del pozo]` del robo a cuchillo (el robo es entero, mínimo 1, y se descuenta del saldo de la víctima).
-- `mvp`: `base` × `multiplier`^(racha de MVP − 1), redondeado; `killer_bonus` por matar al MVP de la ronda anterior.
+- `mvp`: `base` × `multiplier`^(racha de MVP − 1), redondeado y con tope `max` (100; 0 = sin tope); `killer_bonus` por matar al MVP de la ronda anterior.
 - `weapon_bonus`: `amount` por kill y la lista de armas (nombres del DeathMsg: `ak47`, `m4a1`, `awp`...).
 - `bounty.min`: recompensa mínima.
 

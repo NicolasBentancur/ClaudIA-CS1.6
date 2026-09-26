@@ -30,6 +30,28 @@ final class JobsTest extends AppTestCase
         $this->assertGreaterThanOrEqual(400, $this->app->wallet->balance($uid));
     }
 
+    public function testQuittingAndReapplyingDoesNotResetTheClaimCooldown(): void
+    {
+        $a = $this->player(1, 'Ana');
+        $uid = (int) $a->userId;
+        $this->app->jobs->setRandom(fn () => 0.99); // sin bonus ni despido
+        $this->app->jobs->apply($uid, 'taxista', 'radiotaxi');
+        $this->app->jobs->claim($uid);
+        $this->app->jobs->quit($uid);
+        // Puede volver a postularse, pero el sueldo sigue siendo uno por día.
+        $this->app->jobs->apply($uid, 'taxista', 'radiotaxi');
+        try {
+            $this->app->jobs->claim($uid);
+            $this->fail('Renunciar y volver a entrar no debería habilitar otro cobro');
+        } catch (UserError $e) {
+            $this->assertStringContainsString('Faltan', $e->getMessage());
+        }
+        $this->assertSame(200, $this->app->wallet->balance($uid));
+        Clock::advance(24 * 3600);
+        $this->app->jobs->claim($uid);
+        $this->assertGreaterThanOrEqual(400, $this->app->wallet->balance($uid));
+    }
+
     public function testRequirementsAreChecked(): void
     {
         $a = $this->player(1, 'Ana');

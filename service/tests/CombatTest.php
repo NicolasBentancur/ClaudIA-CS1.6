@@ -193,6 +193,34 @@ final class CombatTest extends AppTestCase
         $this->assertSame($before + 2, $this->coins($ana));
     }
 
+    public function testMvpRewardIsCapped(): void
+    {
+        $ana = $this->player(1, 'Ana');
+        $beto = $this->player(2, 'Beto');
+        for ($i = 0; $i < 100; $i++) {
+            $this->app->combat->roundStart();
+            $this->kill($ana, $beto, 'usp');
+            $this->app->combat->roundEnd();
+        }
+        // Sin tope, la ronda 100 pagaría 20 × 1,025^99 ≈ 231.
+        $last = $this->app->db->value("SELECT amount FROM transactions WHERE user_id = ? AND kind = 'mvp' ORDER BY id DESC LIMIT 1", [(int) $ana->userId]);
+        $this->assertSame(100, (int) $last);
+        $this->assertStringContainsString('con 1 kills (+100)', $this->lastChat(Out::ALL));
+    }
+
+    public function testBotKillsDoNotPay(): void
+    {
+        $ana = $this->player(1, 'Ana');
+        $this->app->combat->setRandom(fn (int $min, int $max): int => $min);   // arma bonus: ak47
+        $this->app->combat->roundStart();
+        for ($i = 0; $i < 20; $i++) {
+            $this->kill($ana, null);   // víctima sin cuenta: un bot
+        }
+        $this->app->combat->roundEnd();
+        $this->assertSame(0, $this->coins($ana));   // ni racha, ni arma bonus, ni MVP
+        $this->assertSame(0, $this->app->combat->streak((int) $ana->userId)['kills']);
+    }
+
     public function testWeaponBonus(): void
     {
         $ana = $this->player(1, 'Ana');

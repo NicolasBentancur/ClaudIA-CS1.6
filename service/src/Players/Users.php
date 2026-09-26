@@ -56,9 +56,13 @@ final class Users
         $this->db->exec('UPDATE users SET apodo = ? WHERE id = ?', [$apodo, $id]);
     }
 
+    /**
+     * No toca last_birthday_year: el regalo es uno por año aunque se cambie la fecha. Si no, anotar
+     * la de hoy una y otra vez lo cobraría cada vez.
+     */
     public function setBirthday(int $id, ?string $mmdd): void
     {
-        $this->db->exec('UPDATE users SET birthday = ?, last_birthday_year = NULL WHERE id = ?', [$mmdd, $id]);
+        $this->db->exec('UPDATE users SET birthday = ? WHERE id = ?', [$mmdd, $id]);
     }
 
     public function coins(int $id): int

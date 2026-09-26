@@ -1,5 +1,5 @@
 {
-    "_comentario": "Trabajos. Cada trabajo tiene empleadores (multiplicadores de sueldo, bonus, ascenso y despido) y niveles (sueldo diario, bonus y condiciones para ascender). Se cobra cada claim_cooldown_hours con /cobrar. Si te echan o renunciás y volvés al mismo trabajo, entrás rehire_level_penalty / resign_level_penalty niveles más abajo del que tenías.",
+    "_comentario": "Trabajos. Cada trabajo tiene empleadores (multiplicadores de sueldo, bonus, ascenso y despido) y niveles (sueldo diario, bonus y condiciones para ascender). Se cobra cada claim_cooldown_hours con /cobrar (la espera es por jugador: cambiar de trabajo no la reinicia). Si te echan o renunciás y volvés al mismo trabajo, entrás rehire_level_penalty / resign_level_penalty niveles más abajo del que tenías.",
     "claim_cooldown_hours": 24,
     "rehire_level_penalty": 1,
     "resign_level_penalty": 1,

@@ -225,12 +225,13 @@ final class CombatService
     /**
      * Una muerte. $killer / $victim son usuarios (null = bot o sin identificarse);
      * $selfOrWorld = suicidio o muerte por el mundo; $teamKill = mató a un compañero.
+     * Solo pagan las muertes de jugadores identificados: matar bots no suma racha, MVP ni arma bonus.
      */
     public function onKill(?int $killer, ?int $victim, string $weapon, bool $selfOrWorld, bool $teamKill): void
     {
         $weapon = strtolower($weapon);
         $knife = $weapon === 'knife';
-        $validKill = !$selfOrWorld && !$teamKill && $killer !== null;
+        $validKill = !$selfOrWorld && !$teamKill && $killer !== null && $victim !== null;
 
         // 1. Duelos: gana solo si lo mató el rival; cualquier otra muerte lo cancela.
         if ($victim !== null && ($d = $this->activeDuelOf($victim)) !== null) {
@@ -339,7 +340,10 @@ final class CombatService
         $this->mvpStreak = $best === $this->mvp ? $this->mvpStreak + 1 : 1;
         $this->mvp = $best;
         $this->mvpBest[$best] = max($this->mvpBest[$best] ?? 0, $this->mvpStreak);
-        $reward = (int) round((float) $this->cfg('mvp.base', 20) * ((float) $this->cfg('mvp.multiplier', 1.025)) ** ($this->mvpStreak - 1));
+        // Con tope: sin él, el premio crece exponencial (más de 32.000 por ronda a las 300 seguidas).
+        $reward = (float) $this->cfg('mvp.base', 20) * ((float) $this->cfg('mvp.multiplier', 1.025)) ** ($this->mvpStreak - 1);
+        $cap = (int) $this->cfg('mvp.max', 100);
+        $reward = (int) round($cap > 0 ? min($reward, $cap) : $reward);
         $this->app->wallet->credit($best, $reward, 'mvp', "MVP ({$max} kills)");
         $this->app->out->chat(Out::ALL, "MVP de la ronda: {green}{$this->app->nick($best)}{default} con {$max} kills (+" . Text::coins($reward) . ')'
             . ($this->mvpStreak > 1 ? " - {$this->mvpStreak} rondas seguidas" : '') . '.');

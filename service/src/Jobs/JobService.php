@@ -140,9 +140,12 @@ final class JobService
             $level = max(0, (int) $last['level'] - $penalty);
         }
         $level = min($level, count((array) $job['levels']) - 1);
+        // La espera para cobrar es por jugador, no por empleo: si no, renunciar y volver a postularse
+        // dejaba cobrar el sueldo al instante, una y otra vez.
+        $lastPaid = $this->db->value("SELECT MAX(created_at) FROM transactions WHERE user_id = ? AND kind = 'salary'", [$userId]);
         $this->db->exec(
-            'INSERT INTO employment(user_id, job, employer, level, hired_at, level_since, last_paid_at) VALUES(?, ?, ?, ?, ?, ?, NULL)',
-            [$userId, $jobId, $employerId, $level, $now, $now]
+            'INSERT INTO employment(user_id, job, employer, level, hired_at, level_since, last_paid_at) VALUES(?, ?, ?, ?, ?, ?, ?)',
+            [$userId, $jobId, $employerId, $level, $now, $now, $lastPaid === null ? null : (int) $lastPaid]
         );
         Log::info('Contratado', ['user' => $userId, 'job' => $jobId, 'employer' => $employerId, 'level' => $level]);
         return ['level' => $level, 'levelName' => (string) ($this->levelDef($job, $level)['name'] ?? '')];

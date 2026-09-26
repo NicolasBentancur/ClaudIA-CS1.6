@@ -148,8 +148,8 @@ Música por el chat de voz, pedida por los jugadores.
 | `/solicitudes`, `/aceptarg <nick>`, `/rechazarg <nick>`, `/expulsarg <nick>`, `/traspasarg <nick>`, `/editarg ...`, `/disolver` | Dueño del grupo. |
 | `/donar <monto>`, `/fondo`, `/fondo dar <nick> <monto>` | Fondo común del grupo (cuotas cada 100 rondas, impuesto del 15% cada 300 rondas del dueño). |
 | `/duelo <nick> <monto>`, `/aceptar_duelo`, `/rechazar_duelo` | Duelo por coins (1 a 30.000; los dos tienen que tenerlos). El que mate al otro se lleva el doble. Si uno muere por otra causa se devuelve todo; si uno se va, pierde. Máximo 5 duelos seguidos por pareja (se reinicia tras 1 h sin duelos). |
-| `/racha` | Racha de kills: 2→5, 3→10, 5→20, 7→100, 10→200, 15→400, 20→1000 coins. Lo ganado va a un pozo que se pierde al morir; si te matan a cuchillo, el asesino te puede robar parte del pozo. |
-| `/mvp`, `/arma` | MVP de la ronda (más kills): 20 × 1,025^(racha−1) coins; matar al MVP anterior da +2. Arma bonus de la ronda: +5 por kill con ella. |
+| `/racha` | Racha de kills: 2→5, 3→10, 5→20, 7→100, 10→200, 15→400, 20→1000 coins. Lo ganado va a un pozo que se pierde al morir; si te matan a cuchillo, el asesino te puede robar parte del pozo. Solo cuentan las muertes de jugadores con cuenta (los bots no suman, tampoco para el MVP ni el arma bonus). |
+| `/mvp`, `/arma` | MVP de la ronda (más kills): 20 × 1,025^(racha−1) coins, hasta 100; matar al MVP anterior da +2. Arma bonus de la ronda: +5 por kill con ella. |
 | `/bounty [nick monto]` | Recompensa por la cabeza de alguien (mínimo 100, se acumulan sobre el mismo jugador, una a la vez). Se cobra matándolo a cuchillo. |
 | `/cancelar` | Cancela el formulario por chat que estés completando. |
 | `amx_darcoins <nick> <monto>`, `amx_quitarcoins <nick> <monto>`, `amx_claudia_reload` | Admin (consola). |
