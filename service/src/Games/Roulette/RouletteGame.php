@@ -18,7 +18,8 @@ use Claudia\Util\Text;
  *   página -> {"type":"spin","bets":[...]}
  *   servicio -> spin_start, frames (toda la trayectoria de una vez: la página la pasa a animación CSS), result
  * Sonidos (giro, rebotes, ganar/perder) se reproducen en el juego vía el plugin,
- * sincronizados con los tiempos de la simulación.
+ * sincronizados con los tiempos de la simulación. La ronda se liquida al girar; result y el
+ * anuncio llegan al final de la animación.
  */
 final class RouletteGame implements GameHandler
 {
@@ -69,15 +70,24 @@ final class RouletteGame implements GameHandler
         $this->casino->validateTotal($total);
 
         $result = Wheel::draw();
-        $roundId = $this->casino->openRound($s->userId, 'ruleta', $total, ['bets' => $bets]);
         $fps = self::$spinning >= $this->config->int('games.ruleta.max_spins_at_full_fps', 8)
             ? $this->config->int('games.ruleta.fallback_fps', 15)
             : $this->config->int('games.ruleta.fps', 30);
         $sim = $this->physics->simulate($result, (float) ($s->state['wheel'] ?? 0), $fps);
 
+        // La trayectoria que va a la página ya revela el número: la ronda se liquida ahora y no al
+        // final de la animación, así un reinicio del servicio en el medio no la reembolsa.
+        $roundId = $this->casino->openRound($s->userId, 'ruleta', $total, ['bets' => $bets]);
+        $balance = $this->wallet->balance($s->userId);
+        $color = Wheel::color($result);
+        $settled = $this->casino->settle($roundId, Bets::payout($bets, $result), "Jugó a la ruleta: salió el {$result} ({$color}).", [
+            'bets' => $bets,
+            'result' => $result,
+        ], false);
+
         self::$spinning++;
         $s->state['busy'] = true;
-        $s->state['round'] = ['id' => $roundId, 'bets' => $bets, 'result' => $result, 'settled' => false];
+        $s->state['round'] = ['bets' => $bets, 'result' => $result, 'settled' => $settled, 'shown' => false];
         $s->state['wheel'] = $sim['wheelEnd'];
 
         $s->send([
@@ -85,7 +95,7 @@ final class RouletteGame implements GameHandler
             'fps' => $fps,
             'duration' => $sim['duration'],
             'buffer' => self::CLIENT_BUFFER,
-            'balance' => $this->wallet->balance($s->userId),
+            'balance' => $balance,
             'total' => $total,
         ]);
         $this->manager->sound($s, 'spin');
@@ -98,29 +108,25 @@ final class RouletteGame implements GameHandler
 
     public function onClose(GameSession $s): void
     {
-        // Si cierran el MOTD a mitad de giro, la ronda se liquida igual.
-        if (isset($s->state['round']) && !$s->state['round']['settled']) {
+        // Si cierran el MOTD a mitad de giro, el resultado se anuncia igual.
+        if (isset($s->state['round']) && !$s->state['round']['shown']) {
             $this->finish($s, false);
         }
     }
 
+    /** Fin de la animación: resultado a la página y anuncio (la plata ya se liquidó al girar). */
     private function finish(GameSession $s, bool $notify = true): void
     {
         $round = $s->state['round'] ?? null;
-        if ($round === null || $round['settled']) {
+        if ($round === null || $round['shown']) {
             return;
         }
-        $s->state['round']['settled'] = true;
+        $s->state['round']['shown'] = true;
         self::$spinning = max(0, self::$spinning - 1);
+        $settled = $round['settled'];
+        $this->casino->publish($settled);
 
         $result = (int) $round['result'];
-        $payout = Bets::payout($round['bets'], $result);
-        $color = Wheel::color($result);
-        $settled = $this->casino->settle((int) $round['id'], $payout, "Jugó a la ruleta: salió el {$result} ({$color}).", [
-            'bets' => $round['bets'],
-            'result' => $result,
-        ]);
-
         $winners = [];
         foreach ($round['bets'] as $i => $b) {
             $ret = Bets::betReturn($b, $result);
@@ -135,15 +141,16 @@ final class RouletteGame implements GameHandler
         if (!$notify) {
             return;
         }
+        $balance = $this->wallet->balance($s->userId);
         $s->send([
             'type' => 'result',
             'number' => $result,
-            'color' => $color,
-            'payout' => $payout,
+            'color' => Wheel::color($result),
+            'payout' => $settled['payout'],
             'net' => $settled['net'],
             'confiscated' => $settled['confiscated'],
-            'balance' => $settled['balance'],
-            'chips' => $this->casino->chipsFor($settled['balance']),
+            'balance' => $balance,
+            'chips' => $this->casino->chipsFor($balance),
             'winners' => $winners,
             'history' => $s->state['history'],
         ]);

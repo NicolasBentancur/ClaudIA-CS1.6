@@ -40,6 +40,13 @@ final class BlackjackGame implements GameHandler
             );
             $s->state['round'] = null;
             $s->state['busy'] = false;
+            $s->state['reveal'] = null;
+            $s->state['frame'] = null;
+        }
+        // Si la página se reconecta mientras juega el crupier, sigue viendo la carta en la que iba.
+        if ($s->state['reveal'] !== null && $s->state['frame'] !== null) {
+            $s->send(['init' => true] + $s->state['frame']);
+            return;
         }
         $this->sendState($s, ['init' => true]);
     }
@@ -49,7 +56,7 @@ final class BlackjackGame implements GameHandler
         /** @var Table $t */
         $t = $s->state['table'];
         $type = (string) ($msg['type'] ?? '');
-        if ($t->phase === Table::DEALER) {
+        if ($t->phase === Table::DEALER || ($s->state['reveal'] ?? null) !== null) {
             throw new UserError('Esperá que juegue el crupier.');
         }
         switch ($type) {
@@ -95,14 +102,18 @@ final class BlackjackGame implements GameHandler
     {
         /** @var Table|null $t */
         $t = $s->state['table'] ?? null;
-        if ($t === null || $s->state['round'] === null) {
+        if ($t === null) {
             return;
         }
-        $t->standAll();
-        while ($t->dealerStep()) {
-            // el crupier juega sin animación
+        if ($s->state['round'] !== null) {
+            $t->standAll();
+            while ($t->dealerStep()) {
+                // el crupier juega sin animación
+            }
+            $this->settle($s);
         }
-        $this->settle($s, false);
+        // Una mano liquidada que la página no llegó a ver terminar se anuncia igual.
+        $this->reveal($s, false);
     }
 
     private function progress(GameSession $s): void
@@ -110,31 +121,49 @@ final class BlackjackGame implements GameHandler
         /** @var Table $t */
         $t = $s->state['table'];
         if ($t->phase === Table::DEALER) {
-            $this->sendState($s);
-            $this->manager->later($s, self::DEALER_DELAY, fn () => $this->dealerTurn($s));
+            $this->playDealer($s);
             return;
         }
         if ($t->phase === Table::DONE) {
-            $this->settle($s, true);
+            $this->settle($s);
+            $this->reveal($s, true);
             return;
         }
         $this->sendState($s);
     }
 
-    private function dealerTurn(GameSession $s): void
+    /**
+     * Desde acá la página ve la carta tapada: el crupier juega toda su mano de una vez y la ronda se
+     * liquida en el acto. Los estados intermedios se arman antes y se muestran de a una carta; si el
+     * servicio se reinicia en el medio, la ronda ya está cerrada y no se reembolsa.
+     */
+    private function playDealer(GameSession $s): void
     {
         /** @var Table $t */
         $t = $s->state['table'];
-        if ($t->dealerStep()) {
-            $this->manager->sound($s, 'card');
-            $this->sendState($s);
-            $this->manager->later($s, self::DEALER_DELAY, fn () => $this->dealerTurn($s));
-            return;
+        $frames = [$this->stateMessage($s)];
+        while ($t->dealerStep()) {
+            $frames[] = $this->stateMessage($s);
         }
-        $this->settle($s, true);
+        $this->settle($s);
+        $this->showFrame($s, $frames[0]);
+        foreach (array_slice($frames, 1) as $i => $frame) {
+            $this->manager->later($s, ($i + 1) * self::DEALER_DELAY, function () use ($s, $frame): void {
+                $this->manager->sound($s, 'card');
+                $this->showFrame($s, $frame);
+            });
+        }
+        $this->manager->later($s, count($frames) * self::DEALER_DELAY, fn () => $this->reveal($s, true));
     }
 
-    private function settle(GameSession $s, bool $notify): void
+    private function showFrame(GameSession $s, array $frame): void
+    {
+        $s->state['frame'] = $frame;
+        $s->send($frame);
+    }
+
+    /** Liquida la mano (la plata) y deja el anuncio pendiente para reveal(). */
+    private function settle(GameSession $s): void
     {
         /** @var Table $t */
         $t = $s->state['table'];
@@ -143,12 +172,24 @@ final class BlackjackGame implements GameHandler
             return;
         }
         $s->state['round'] = null;
-        $s->state['busy'] = false;
         $results = array_map(fn (Hand $h) => $h->result, $t->hands);
         $summary = 'Jugó al blackjack: '
             . implode(', ', array_map(fn (Hand $h) => $h->value() . ' (' . $this->resultName((string) $h->result) . ')', $t->hands))
             . ' contra ' . $t->dealer->value() . ' del crupier.';
-        $settled = $this->casino->settle((int) $roundId, $t->totalReturn(), $summary, ['results' => $results]);
+        $s->state['reveal'] = $this->casino->settle((int) $roundId, $t->totalReturn(), $summary, ['results' => $results], false);
+    }
+
+    /** Estado final con lo ganado o perdido, y el anuncio. */
+    private function reveal(GameSession $s, bool $notify): void
+    {
+        $settled = $s->state['reveal'] ?? null;
+        if ($settled === null) {
+            return;
+        }
+        $s->state['reveal'] = null;
+        $s->state['frame'] = null;
+        $s->state['busy'] = false;
+        $this->casino->publish($settled);
         if (!$notify) {
             return;
         }
@@ -160,6 +201,12 @@ final class BlackjackGame implements GameHandler
     }
 
     private function sendState(GameSession $s, array $extra = []): void
+    {
+        $s->send($this->stateMessage($s, $extra));
+    }
+
+    /** Estado completo de la mesa como lo ve la página (la carta tapada, oculta mientras juega el jugador). */
+    private function stateMessage(GameSession $s, array $extra = []): array
     {
         /** @var Table $t */
         $t = $s->state['table'];
@@ -173,7 +220,7 @@ final class BlackjackGame implements GameHandler
             : $t->dealer->value();
         $balance = $this->wallet->balance($s->userId);
         $rules = $this->config->array('games.blackjack.rules');
-        $s->send([
+        return [
             'type' => 'state',
             'phase' => $t->phase,
             'dealer' => ['cards' => $dealerCards, 'value' => $dealerValue, 'blackjack' => !$hideHole && $t->dealer->blackjack()],
@@ -204,7 +251,7 @@ final class BlackjackGame implements GameHandler
                 'payout' => '3:2',
                 'soft17' => ($rules['dealer_hits_soft17'] ?? false) ? 'pide' : 'se planta',
             ],
-        ] + $extra);
+        ] + $extra;
     }
 
     private function resultName(string $r): string

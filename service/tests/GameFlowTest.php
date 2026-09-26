@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Claudia\Tests;
 
+use Claudia\Clock;
+use Claudia\Games\Blackjack\Shoe;
+use Claudia\Games\Blackjack\Table;
 use Claudia\Games\GameSession;
 use Claudia\Tests\Support\AppTestCase;
 
@@ -95,6 +98,73 @@ final class GameFlowTest extends AppTestCase
         $this->app->games->closeForUser($s->userId);
         $round = $this->app->db->one('SELECT * FROM game_rounds ORDER BY id DESC LIMIT 1');
         $this->assertSame('settled', $round['status']);
+    }
+
+    public function testRouletteIsSettledBeforeTheAnimationEnds(): void
+    {
+        $s = $this->openGame('ruleta');
+        $this->app->games->receive($s, ['type' => 'spin', 'bets' => [['type' => 'rojo', 'amount' => 100]]]);
+
+        // La trayectoria (y con ella el número) ya está en la página: la ronda tiene que estar cerrada.
+        $round = $this->app->db->one('SELECT * FROM game_rounds ORDER BY id DESC LIMIT 1');
+        $this->assertSame('settled', $round['status']);
+        $balance = 900 + (int) $round['payout'];
+        $this->assertSame($balance, $this->app->wallet->balance($s->userId));
+        $this->assertSame(900, $this->messages($s, 'spin_start')[0]['balance']);
+
+        // Si el servicio se reinicia a mitad de la animación, no hay nada que reembolsar.
+        $this->assertSame(0, $this->app->casino->refundOpenRounds());
+        $this->assertSame($balance, $this->app->wallet->balance($s->userId));
+
+        // El resultado y el anuncio esperan al final de la animación.
+        $this->assertSame([], $this->messages($s, 'result'));
+        $this->assertNull($this->app->recentGames->recent($s->userId, Clock::now()));
+        $this->timers->run();
+        $this->assertSame($balance, $this->messages($s, 'result')[0]['balance']);
+        $this->assertNotNull($this->app->recentGames->recent($s->userId, Clock::now()));
+    }
+
+    public function testBlackjackDealerHandIsSettledBeforeTheAnimation(): void
+    {
+        $s = $this->openGame('blackjack');
+        // Jugador 10+8 contra crupier 10+6, que pide y saca un 5 (21).
+        $shoe = new Shoe(6);
+        $shoe->stack(array_map(fn ($r) => Shoe::card($r), ['10', '10', '8', '6', '5']));
+        $s->state['table'] = new Table($shoe, $this->config->array('games.blackjack.rules'));
+        $this->app->games->receive($s, ['type' => 'bet', 'amount' => 100]);
+        $this->app->games->receive($s, ['type' => 'stand']);
+
+        $round = $this->app->db->one('SELECT * FROM game_rounds ORDER BY id DESC LIMIT 1');
+        $this->assertSame('settled', $round['status']);
+        $this->assertSame(0, (int) $round['payout']);
+        $this->assertSame(900, $this->app->wallet->balance($s->userId));
+        $this->assertSame(0, $this->app->casino->refundOpenRounds());
+
+        // La página todavía ve jugar al crupier (dos cartas, sin resultado) y no puede apostar.
+        $states = $this->messages($s, 'state');
+        $shown = end($states);
+        $this->assertSame('dealer', $shown['phase']);
+        $this->assertCount(2, $shown['dealer']['cards']);
+        $this->assertNull($shown['hands'][0]['result']);
+        $this->app->games->receive($s, ['type' => 'bet', 'amount' => 100]);
+        $this->assertStringContainsString('Esperá', $this->messages($s, 'error')[0]['message']);
+
+        // Si se reconecta en el medio, sigue viendo la misma carta.
+        $this->app->games->receive($s, ['type' => 'hello']);
+        $states = $this->messages($s, 'state');
+        $again = end($states);
+        $this->assertTrue($again['init']);
+        $this->assertSame('dealer', $again['phase']);
+        $this->assertCount(2, $again['dealer']['cards']);
+
+        $this->timers->run();
+        $states = $this->messages($s, 'state');
+        $final = end($states);
+        $this->assertSame('done', $final['phase']);
+        $this->assertCount(3, $final['dealer']['cards']);
+        $this->assertSame('lose', $final['hands'][0]['result']);
+        $this->assertSame(-100, $final['net']);
+        $this->assertTrue($final['actions']['bet']);
     }
 
     public function testBlackjackHandIsSettled(): void

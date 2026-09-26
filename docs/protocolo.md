@@ -73,6 +73,8 @@ Si en 2,5 s no pudo conectar, usa polling:
 
 Todos los mensajes hacia la página llevan un `seq` creciente, así que al cambiar de transporte no se pierde ni se duplica nada.
 
+Cada mensaje de la página puede pesar como mucho 64 KB: si se pasa, el WebSocket se corta y `POST /api/send` responde 413.
+
 ### Ruleta
 
 | Mensaje | Contenido |

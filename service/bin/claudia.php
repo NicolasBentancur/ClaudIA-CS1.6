@@ -62,8 +62,7 @@ $pluginWorker->onWorkerStart = function () use ($app, $config, $base): void {
 
     // En un mismo proceso: HTTP para las páginas y WebSocket para los juegos (compatible con Windows).
     $http = new Worker(sprintf('http://%s:%d', $config->string('service.http.host', '0.0.0.0'), $config->int('service.http.port', 27101)));
-    $httpServer = new HttpServer($base . '/public', $app->games);
-    $http->onMessage = [$httpServer, 'handle'];
+    (new HttpServer($base . '/public', $app->games))->attach($http);
     $http->listen();
 
     $ws = new Worker(sprintf('websocket://%s:%d', $config->string('service.ws.host', '0.0.0.0'), $config->int('service.ws.port', 27102)));

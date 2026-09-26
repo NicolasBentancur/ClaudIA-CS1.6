@@ -94,10 +94,12 @@ final class Casino
     }
 
     /**
-     * Liquida la ronda.
-     * @return array{balance:int, net:int, confiscated:int, bet:int, payout:int}
+     * Liquida la ronda. Con $publish en false todavía no la anuncia (chat, contexto de la IA): el juego
+     * liquida apenas se decide el resultado, llama a publish() cuando la página termina de mostrarlo, y
+     * así un reinicio en medio de la animación no reembolsa una ronda que el jugador ya vio.
+     * @return array{balance:int, net:int, confiscated:int, bet:int, payout:int, user:int, game:string, text:string}
      */
-    public function settle(int $roundId, int $payout, string $summary, array $detail = []): array
+    public function settle(int $roundId, int $payout, string $summary, array $detail = [], bool $publish = true): array
     {
         $round = $this->round($roundId);
         if ($round['status'] !== 'open') {
@@ -127,16 +129,31 @@ final class Casino
         if ($confiscated > 0) {
             $text .= ' Por estar en el Clearing le confiscaron ' . Text::coins($confiscated) . '.';
         }
-        $this->recent->record($userId, $game, $text, Clock::now());
-        $this->events->emit('game.finished', $userId, $game, $bet, $payout, $net);
-
-        return [
+        $settled = [
             'balance' => $this->wallet->balance($userId),
             'net' => $net,
             'confiscated' => $confiscated,
             'bet' => $bet,
             'payout' => $payout,
+            'user' => $userId,
+            'game' => $game,
+            'text' => $text,
         ];
+        if ($publish) {
+            $this->publish($settled);
+        }
+        return $settled;
+    }
+
+    /**
+     * Anuncia una ronda ya liquidada: queda como "juego reciente" para la IA y dispara game.finished
+     * (los avisos de ganancias y pérdidas grandes en el chat).
+     * @param array{net:int, bet:int, payout:int, user:int, game:string, text:string} $settled lo que devolvió settle()
+     */
+    public function publish(array $settled): void
+    {
+        $this->recent->record($settled['user'], $settled['game'], $settled['text'], Clock::now());
+        $this->events->emit('game.finished', $settled['user'], $settled['game'], $settled['bet'], $settled['payout'], $settled['net']);
     }
 
     /** Al arrancar: devuelve la apuesta de las rondas que quedaron abiertas. */
