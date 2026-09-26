@@ -2,7 +2,7 @@
     "name": "claudia/service",
     "description": "Servicio intermedio de Claudia: IA, SQLite, economía y juegos por MOTD para el plugin AMXX.",
     "type": "project",
-    "license": "proprietary",
+    "license": "MIT",
     "require": {
         "php": ">=8.2",
         "ext-curl": "*",

@@ -177,7 +177,7 @@ Para probar el servicio sin el juego está `tools/fake_plugin.php`, un cliente q
 
 Más detalle en [docs/configuracion.md](docs/configuracion.md) y [docs/protocolo.md](docs/protocolo.md).
 
-## Claudia
+## Imágenes
 
 <p align="center">
   <img src="assets/claudia-solaire.jpg" height="250" alt="Bender como Solaire de Dark Souls, con los brazos en alto al sol">
@@ -193,8 +193,12 @@ Y esta es la foto de perfil de Claudia en WhatsApp, en [ClaudIA](https://github.
   <img src="assets/profile_picture_claudia.jpg" height="250" alt="Retrato de una mujer de pelo corto hecha de código verde brillante, estilo Matrix, dentro de un círculo sobre un fondo de caracteres que caen">
 </p>
 
-Las imágenes de `assets/` en las que aparece Bender, de *Futurama*, incluido el banner, las hizo [@TheShrekMaster](https://github.com/TheShrekMaster). No forman parte del código del proyecto: los derechos de las imágenes son de su autor y los del personaje, de sus respectivos propietarios.
+Las imágenes de `assets/` en las que aparece Bender, de *Futurama*, incluido el banner, las hizo [@TheShrekMaster](https://github.com/TheShrekMaster). No están cubiertas por la licencia MIT del código: los derechos de las imágenes son de su autor y los del personaje, de sus respectivos propietarios.
 
 ## Related Projects
 
 - [ClaudIA](https://github.com/gauchitodev/ClaudIA), de [@gauchitodev](https://github.com/gauchitodev): bot de WhatsApp con personalidad uruguaya, hecho a medida para un grupo de amigos. ClaudIA-CS1.6 está basada conceptualmente en ese proyecto, y las imágenes de este README vienen de ahí.
+
+## Licencia
+
+El código está bajo la [licencia MIT](LICENSE). Las imágenes de `assets/` no: ver la nota de la sección [Imágenes](#imágenes).
