@@ -134,7 +134,12 @@ final class ReminderService
         }
         $today = (new \DateTimeImmutable('@' . Clock::now()))->setTimezone(new \DateTimeZone($this->timezone()));
         $year = (int) $today->format('Y');
-        if ($today->format('m-d') !== $u['birthday'] || (int) ($u['last_birthday_year'] ?? 0) === $year) {
+        $birthday = (string) $u['birthday'];
+        // Los del 29/02 lo festejan el 28/02 los años que no son bisiestos.
+        if ($birthday === '02-29' && $today->format('L') === '0') {
+            $birthday = '02-28';
+        }
+        if ($today->format('m-d') !== $birthday || (int) ($u['last_birthday_year'] ?? 0) === $year) {
             return;
         }
         $this->db->exec('UPDATE users SET last_birthday_year = ? WHERE id = ?', [$year, $userId]);

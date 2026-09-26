@@ -141,6 +141,10 @@ final class AuthService
         if ($clean === '' || mb_strlen($nick) < 2) {
             throw new UserError('Tu nick es muy corto para registrarlo.', 'bad_nick');
         }
+        // El nick sale tal cual en muchos mensajes del sistema: con estas etiquetas se volvería colores.
+        if (Text::untag($nick) !== $nick) {
+            throw new UserError('Tu nick no puede tener códigos de color entre llaves. Cambiátelo para registrarlo.', 'bad_nick');
+        }
         foreach ($this->config->array('service.auth.forbidden_nicks', ['player', 'unnamed']) as $bad) {
             if ($clean === Text::fold((string) $bad) || preg_match('/^\(\d+\)' . preg_quote(Text::fold((string) $bad), '/') . '$/', $clean)) {
                 throw new UserError('No podés registrar ese nick, cambiátelo primero (name "TuNick").', 'bad_nick');

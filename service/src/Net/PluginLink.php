@@ -68,7 +68,8 @@ final class PluginLink
     {
         $worker->onConnect = function (TcpConnection $c): void {
             if (!in_array($c->getRemoteIp(), ['127.0.0.1', '::1'], true)) {
-                Log::warning('Conexión de plugin rechazada (no es localhost)', ['ip' => $c->getRemoteIp()]);
+                // No se corta: el servicio puede estar en otra máquina (plugin.host). Lo protege el secreto.
+                Log::warning('Conexión al puerto del plugin desde fuera de localhost (solo la protege el secreto)', ['ip' => $c->getRemoteIp()]);
             }
             $c->context->authed = false;
         };

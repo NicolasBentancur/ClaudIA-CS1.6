@@ -6,6 +6,7 @@ namespace Claudia\Players;
 
 use Claudia\Clock;
 use Claudia\Db;
+use Claudia\Util\Text;
 
 /**
  * Acceso a la tabla users.
@@ -77,6 +78,6 @@ final class Users
         if ($u === null) {
             return '?';
         }
-        return ($u['apodo'] ?? '') !== '' ? (string) $u['apodo'] : (string) $u['nick'];
+        return Text::untag(($u['apodo'] ?? '') !== '' ? (string) $u['apodo'] : (string) $u['nick']);
     }
 }

@@ -13,7 +13,6 @@ final class Session
     public bool $registered = false;
     public int $failedLogins = 0;
     public int $lockUntil = 0;
-    public bool $alive = false;
     /** Rol en el servidor (Role::USER..OWNER), lo actualiza el plugin en cada mensaje. */
     public int $role = Role::USER;
 

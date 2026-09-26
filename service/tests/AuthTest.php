@@ -89,6 +89,13 @@ final class AuthTest extends AppTestCase
         $this->assertNull($this->app->sessions->takeResume('Ana', '99.9.9.9'));
     }
 
+    public function testNickWithColorTagsCannotRegister(): void
+    {
+        $s = $this->app->sessions->join(1, '{green}Admin', '10.0.0.1', '');
+        $this->expectException(UserError::class);
+        $this->app->auth->register($s, 'clave123');
+    }
+
     public function testMapChangeResumesOnlyTheSameConnection(): void
     {
         $uid = $this->ana()->userId;

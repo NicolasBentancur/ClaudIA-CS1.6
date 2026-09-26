@@ -31,6 +31,7 @@ El primer mensaje tiene que ser `hello` con el secreto compartido. Si el secreto
 | `stats` | `players: [{slot, kills, deaths, headshots, shots, hits, playtime, rounds}]` (deltas; `rounds` alimenta las cuotas e impuestos de los grupos) | - |
 | `game.kill` | `killer, victim, weapon, headshot, teamkill` (slots; `killer` 0 = el mundo) | - (se manda en cada DeathMsg: duelos, rachas, robo a cuchillo, MVP, arma bonus y recompensas) |
 | `round.start` / `round.end` | - | - (sortea el arma bonus / paga al MVP) |
+| `radio.done` | `id` | - (claudia_radio terminó de pasar el último trozo del tema; el servicio pasa al siguiente) |
 | `admin.coins` | `slot, admin_name, target, amount, mode (give\|take)` | `message` |
 | `admin.group` | `slot, admin_name, args` (ej. `"crear N1k PIB Los Pibes"`) | `message`, `lines[]` (detalle opcional) |
 | `admin.reload` | - | `message` |
@@ -50,6 +51,16 @@ El primer mensaje tiene que ser `hello` con el secreto compartido. Si el secreto
 | `input.capture` | `slot, on` | Mientras `on` es true, lo que el jugador escribe (que no sea un /comando) no se muestra y se manda como `input`. |
 | otro | - | Se reenvía a los plugins con el forward `claudia_event`. |
 
+Los que atienden otros plugins por `claudia_event`:
+
+| type | data | quién y qué hace |
+|---|---|---|
+| `radio.play` | `id, dir, chunks[]` (ms de cada trozo), `title` | claudia_radio pasa los trozos `cstrike/<dir>/000.wav...` por la voz a los que escuchan la radio. |
+| `radio.stop` | `id` | claudia_radio corta el tema. |
+| `chess.spec` | `slot, on` | claudia_ajedrez manda al jugador a espectador (`on`) o lo devuelve a su equipo. |
+| `chess.voice` | `slot, on` | claudia_ajedrez prende o apaga el micrófono del jugador (`+voicerecord`). |
+| `chess.pair` | `a, b, on` | claudia_ajedrez activa la voz privada entre los dos jugadores de la partida. |
+
 ## Reconexión y cambio de mapa
 
 En cada cambio de mapa el plugin se recarga y se vuelve a conectar. El servicio recuerda durante `session_resume_seconds` el nick, la IP y el `userid` de cada jugador logueado, así que al volver no tiene que identificarse de nuevo. El `userid` del motor se conserva en el cambio de mapa pero cambia si el jugador sale y vuelve a entrar: así, otro que entra con el mismo nick desde la misma IP (cíber, NAT) no se queda con la sesión.
@@ -58,11 +69,13 @@ Si el que se reinicia es el servicio, el plugin manda `was_logged: true` para re
 
 ## Juegos (MOTD)
 
-`/ruleta` y `/blackjack` crean un token de un solo uso y el servicio manda el evento `motd` con esta URL:
+Cada juego que se abre (`/ruleta`, `/blackjack`, `/minas`, los slots, el ajedrez) crea un token aleatorio para esa sesión y el servicio manda el evento `motd` con esta URL:
 
 ```
 http://<public_host>:27101/juegos/<juego>/?t=<token>&ws=ws://<public_host>:27102/
 ```
+
+El token no es de un solo uso: vale mientras el juego esté abierto (se invalida al abrir otro, al desloguearse o tras `games.idle_seconds` sin conexión). Viaja en la URL por HTTP, así que quien la vea puede jugar con esa sesión.
 
 La página intenta conectarse por WebSocket y manda `{"type":"hello","token":"..."}` como primer mensaje.
 

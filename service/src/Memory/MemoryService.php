@@ -81,15 +81,22 @@ final class MemoryService
         return array_map(fn ($r) => (int) $r['user_id'], $rows);
     }
 
-    /** Reemplaza toda la memoria del usuario por un único resumen (las entradas nuevas posteriores a $upToId se conservan). */
-    public function replaceWithSummary(int $userId, string $summary, int $upToId): void
+    /**
+     * Reemplaza toda la memoria del usuario por un único resumen (las entradas nuevas posteriores a
+     * $upToId se conservan). Devuelve false, sin guardar nada, si las entradas resumidas ya no están:
+     * la borraron (forget) mientras se pedía el resumen, y guardarlo la haría reaparecer.
+     */
+    public function replaceWithSummary(int $userId, string $summary, int $upToId): bool
     {
-        $this->db->transaction(function () use ($userId, $summary, $upToId): void {
-            $this->db->exec('DELETE FROM memories WHERE user_id = ? AND id <= ?', [$userId, $upToId]);
+        return $this->db->transaction(function () use ($userId, $summary, $upToId): bool {
+            if ($this->db->exec('DELETE FROM memories WHERE user_id = ? AND id <= ?', [$userId, $upToId]) === 0) {
+                return false;
+            }
             $this->db->exec(
                 "INSERT INTO memories(user_id, kind, text, created_at) VALUES(?, 'resumen', ?, ?)",
                 [$userId, Text::sanitize($summary), Clock::now()]
             );
+            return true;
         });
     }
 

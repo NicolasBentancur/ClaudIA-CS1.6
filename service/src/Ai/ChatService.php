@@ -47,7 +47,8 @@ final class ChatService
         if (!$this->config->bool('ai.enabled', true)) {
             return;
         }
-        $key = $s->userId !== null ? 'u' . $s->userId : 's' . $s->slot . ':' . mb_strtolower($s->nick);
+        // Los no logueados van por slot: con el nick en la clave, cambiárselo reiniciaba el cooldown.
+        $key = $s->userId !== null ? 'u' . $s->userId : 's' . $s->slot;
         $reason = $this->policy->evaluate($key, $s->userId, $text, Clock::micro());
         if ($reason === null || !$this->policy->takeGlobal(Clock::micro())) {
             return;
@@ -66,30 +67,33 @@ final class ChatService
         $this->policy->begin($key);
         $userId = $s->userId;
         $this->router->generate($prompt, fn (array $j) => isset($j['respuesta']) && is_string($j['respuesta']), function (?array $json) use ($key, $userId): void {
-            if ($json === null) {
-                $this->policy->end($key, false, Clock::now());
-                if ($this->config->string('ai.on_all_fail', 'silence') === 'message') {
-                    $this->say($this->config->string('ai.all_fail_message', 'Me quedé sin cuota, bo. Después hablamos.'));
+            // policy->end() en el finally: si algo falla acá (por ejemplo, guardar la memoria), el
+            // jugador no puede quedar "esperando respuesta" para siempre.
+            $responded = false;
+            try {
+                if ($json === null) {
+                    if ($this->config->string('ai.on_all_fail', 'silence') === 'message') {
+                        $this->say($this->config->string('ai.all_fail_message', 'Me quedé sin cuota, bo. Después hablamos.'));
+                    }
+                    return;
                 }
-                return;
-            }
-            $responder = (bool) ($json['responder'] ?? true);
-            $reply = $this->clean((string) ($json['respuesta'] ?? ''));
-            if ($userId !== null) {
-                $this->memory->remember($userId, 'pensamiento', (string) ($json['pensamiento'] ?? ''));
-                $this->memory->remember($userId, 'trato', (string) ($json['trato'] ?? ''));
-                foreach (array_slice((array) ($json['datos'] ?? []), 0, 5) as $dato) {
-                    if (is_string($dato)) {
-                        $this->memory->remember($userId, 'dato', $dato);
+                $reply = $this->clean((string) ($json['respuesta'] ?? ''));
+                if (($json['responder'] ?? true) && $reply !== '') {
+                    $this->say($reply);
+                    $responded = true;
+                }
+                if ($userId !== null) {
+                    $this->memory->remember($userId, 'pensamiento', (string) ($json['pensamiento'] ?? ''));
+                    $this->memory->remember($userId, 'trato', (string) ($json['trato'] ?? ''));
+                    foreach (array_slice((array) ($json['datos'] ?? []), 0, 5) as $dato) {
+                        if (is_string($dato)) {
+                            $this->memory->remember($userId, 'dato', $dato);
+                        }
                     }
                 }
+            } finally {
+                $this->policy->end($key, $responded, Clock::now());
             }
-            if (!$responder || $reply === '') {
-                $this->policy->end($key, false, Clock::now());
-                return;
-            }
-            $this->say($reply);
-            $this->policy->end($key, true, Clock::now());
         });
     }
 

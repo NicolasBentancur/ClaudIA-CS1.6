@@ -30,4 +30,16 @@ final class RemindersTest extends AppTestCase
         $this->app->reminders->tick();
         $this->assertSame(2 * $gift, $this->app->wallet->balance($uid));
     }
+
+    public function testFebruary29BirthdaysAreCelebratedOnThe28thInCommonYears(): void
+    {
+        $ana = $this->player(1, 'Ana');
+        $uid = (int) $ana->userId;
+        $this->cmd($ana, 'cumple 29/02');
+        // 2027 no es bisiesto: el 28/02 al mediodía, en la zona del servicio.
+        $tz = new \DateTimeZone($this->config->string('service.timezone', 'America/Montevideo'));
+        Clock::advance((new \DateTimeImmutable('2027-02-28 12:00:00', $tz))->getTimestamp() - Clock::now());
+        $this->app->reminders->tick();
+        $this->assertSame($this->config->int('reminders.birthday_gift'), $this->app->wallet->balance($uid));
+    }
 }

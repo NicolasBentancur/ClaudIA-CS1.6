@@ -53,6 +53,21 @@ final class StatsTest extends AppTestCase
         $this->assertStringContainsString('Deuda', implode("\n", $this->chats(1)));
     }
 
+    public function testFullProfileFollowsRolesJson(): void
+    {
+        $a = $this->player(1, 'Ana');
+        $b = $this->player(2, 'Beto');
+        $this->app->memory->remember((int) $b->userId, 'pensamiento', 'Beto es un camper');
+        // Como si en roles.json el perfil completo quedara solo para el owner.
+        $this->config->set('roles.permissions', ['players.profile_full' => 'owner'] + $this->config->array('roles.permissions'));
+        $this->events = [];
+        $this->cmd($a, 'perfil beto', true);
+        $chat = implode("\n", $this->chats(1));
+        $console = implode("\n", array_map(fn ($e) => $e['data']['text'], array_filter($this->events, fn ($e) => $e['type'] === 'print' && $e['data']['channel'] === 'console')));
+        $this->assertStringContainsString('Perfil de Beto', $chat);
+        $this->assertStringNotContainsString('Beto es un camper', $chat . $console);
+    }
+
     public function testMessagesCountForStatsAndJobActivity(): void
     {
         $a = $this->player(1, 'Ana');

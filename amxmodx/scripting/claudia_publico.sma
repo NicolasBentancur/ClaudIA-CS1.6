@@ -42,10 +42,12 @@
 #define TASK_CHANGE   74301
 #define TASK_TICK     74302
 #define TASK_REVIVE   74303
+#define TASK_RTV      74304
 #define TASK_PLAY     74400
 #define TASK_RESPAWN  74500   // + id
-#define TASK_TRAIL    74600   // + entidad
 #define TASK_SUMMARY  74700   // + id
+#define TASK_VOTE_SHOW 74800  // + id
+#define TASK_TRAIL    80000   // + entidad (va última: los índices de entidad pasan de 1000)
 
 #define MAX_VOTE_ITEMS 8
 #define RECENT_KEY     "cp_mapas_recientes"
@@ -196,6 +198,8 @@ new g_HealthBefore[MAX_PLAYERS + 1];
 new Float:g_DmgTakeBefore[MAX_PLAYERS + 1];
 
 // Revivir
+new bool:g_HasSprite;
+new g_BodyTeam[MAX_PLAYERS + 1];
 new g_BodySprite[MAX_PLAYERS + 1];
 new Float:g_Body[MAX_PLAYERS + 1][3];
 new Float:g_BodyTime[MAX_PLAYERS + 1];
@@ -226,6 +230,7 @@ new g_VoteMenu = -1;
 new bool:g_Voting;
 new bool:g_VoteDone;
 new bool:g_VoteIsRtv;
+new Float:g_VoteEnd;
 new g_VoteCount;
 new g_VoteMaps[MAX_VOTE_ITEMS][32];
 new g_Votes[MAX_VOTE_ITEMS + 1];
@@ -263,7 +268,17 @@ public plugin_precache()
 			g_SoundFmt[i] = FMT_MP3;
 		}
 	}
-	precache_model(REVIVE_SPRITE);
+	// Precachear un modelo que no existe hace que el motor no cargue el mapa: sin el sprite, los
+	// cuerpos se pueden revivir igual, pero sin cartel.
+	g_HasSprite = bool:file_exists(REVIVE_SPRITE);
+	if (g_HasSprite)
+	{
+		precache_model(REVIVE_SPRITE);
+	}
+	else
+	{
+		log_amx("[Claudia] Falta %s: los cuerpos no van a tener cartel de revivir.", REVIVE_SPRITE);
+	}
 	g_TrailSprite = precache_model("sprites/laserbeam.spr");
 }
 
@@ -383,10 +398,15 @@ public client_disconnected(id)
 	remove_task(TASK_LOADOUT + id);
 	remove_task(TASK_RESPAWN + id);
 	remove_task(TASK_SUMMARY + id);
+	remove_task(TASK_VOTE_SHOW + id);
 	remove_body(id);
 	g_Rtv[id] = false;
 	g_Reviving[id] = 0;
 	reset_damage(id);
+	// Con uno menos, los que ya pidieron rtv pueden alcanzar. Con una tarea: en el cambio de mapa esto
+	// también se llama para todos, y las tareas pendientes se descartan antes de correr.
+	remove_task(TASK_RTV);
+	set_task(0.5, "task_check_rtv", TASK_RTV);
 }
 
 sound_key(id, key[], len)
@@ -436,6 +456,14 @@ public cmd_say(id)
 	{
 		rock_the_vote(id);
 		return PLUGIN_CONTINUE;
+	}
+	if (equal(cmd, "votar") || equal(cmd, "vote"))
+	{
+		if (!show_vote(id, true))
+		{
+			client_print_color(id, print_team_default, "^4[Mapa]^1 %s", g_Voting ? "Ya votaste." : "No hay ninguna votación de mapa en curso.");
+		}
+		return PLUGIN_HANDLED;
 	}
 	return PLUGIN_CONTINUE;
 }
@@ -517,7 +545,18 @@ show_loadout_menu(id)
 public loadout_handler(id, menu, item)
 {
 	menu_destroy(menu);
-	if (item < 0 || !is_user_connected(id))
+	if (!is_user_connected(id))
+	{
+		return PLUGIN_HANDLED;
+	}
+	// Si el menú de armas le tapó la votación de mapa, vuelve a aparecer. Con una tarea y no acá:
+	// mostrar un menú desde el handler del que se está cerrando se pisa con el que lo reemplaza.
+	if (g_Voting && !g_Voted[id])
+	{
+		remove_task(TASK_VOTE_SHOW + id);
+		set_task(0.1, "task_show_vote", TASK_VOTE_SHOW + id);
+	}
+	if (item < 0)
 	{
 		return PLUGIN_HANDLED;
 	}
@@ -931,7 +970,10 @@ public ev_death()
 	{
 		g_Streak[victim] = 0;
 		g_Multi[victim] = 0;
-		g_Reviving[victim] = 0;
+		if (g_Reviving[victim])
+		{
+			cancel_revive(victim);
+		}
 		new team = get_user_team(victim);
 		if (team == 1 || team == 2)
 		{
@@ -1216,13 +1258,17 @@ place_body(id, team)
 		return;
 	}
 	entity_set_string(ent, EV_SZ_classname, "cp_revivir");
-	entity_set_model(ent, REVIVE_SPRITE);
+	if (g_HasSprite)
+	{
+		entity_set_model(ent, REVIVE_SPRITE);
+	}
 	entity_set_int(ent, EV_INT_movetype, MOVETYPE_NONE);
 	entity_set_int(ent, EV_INT_solid, SOLID_NOT);
 	entity_set_int(ent, EV_INT_rendermode, kRenderTransAdd);
 	entity_set_float(ent, EV_FL_renderamt, 200.0);
 	entity_set_float(ent, EV_FL_scale, get_pcvar_float(g_pReviveScale));
 	entity_set_int(ent, EV_INT_iuser4, BODY_MARK + team);
+	g_BodyTeam[id] = team;
 	g_BodySprite[id] = ent;
 	g_BodyTime[id] = get_gametime();
 	update_body(id);
@@ -1255,8 +1301,17 @@ follow_bodies()
 	new Float:now = get_gametime();
 	for (new id = 1; id <= MAX_PLAYERS; id++)
 	{
-		if (g_BodySprite[id] && now - g_BodyTime[id] < 4.0 && is_user_connected(id) && !is_user_alive(id)
-			&& entity_get_int(id, EV_INT_iuser1) == 0)
+		if (!g_BodySprite[id])
+		{
+			continue;
+		}
+		// Si el muerto se cambió de equipo (o pasó a espectador), ya no lo revive nadie.
+		if (!is_user_connected(id) || get_user_team(id) != g_BodyTeam[id])
+		{
+			remove_body(id);
+			continue;
+		}
+		if (now - g_BodyTime[id] < 4.0 && !is_user_alive(id) && entity_get_int(id, EV_INT_iuser1) == 0)
 		{
 			update_body(id);
 		}
@@ -1298,6 +1353,15 @@ public task_revive()
 {
 	check_buyzones();
 	follow_bodies();
+	// El que estaba reviviendo y dejó de estar vivo sin DeathMsg (user_silentkill, pasar a espectador):
+	// suelta el cuerpo y se le apaga la barra.
+	for (new r = 1; r <= MAX_PLAYERS; r++)
+	{
+		if (g_Reviving[r] && !is_user_alive(r))
+		{
+			cancel_revive(r);
+		}
+	}
 	if (g_Warmup)
 	{
 		return;
@@ -1362,7 +1426,7 @@ find_body(id)
 		new bool:taken = false;
 		for (new r = 1; r <= MAX_PLAYERS; r++)
 		{
-			if (r != id && g_Reviving[r] == t)
+			if (r != id && g_Reviving[r] == t && is_user_alive(r))
 			{
 				taken = true;
 				break;
@@ -1720,11 +1784,15 @@ start_vote(bool:rtv)
 		return;
 	}
 
-	// Candidatos: primero los que no se jugaron hace poco.
+	// Candidatos: se sortean primero entre los que no se jugaron hace poco; los recientes solo
+	// completan los lugares que falten.
+	g_VoteCount = 0;
+	new want = clamp(get_pcvar_num(g_pVoteMaps), 2, MAX_VOTE_ITEMS - 1);
 	new Array:pool = ArrayCreate(32);
 	new map[32];
-	for (new pass = 0; pass < 2 && ArraySize(pool) < get_pcvar_num(g_pVoteMaps); pass++)
+	for (new pass = 0; pass < 2 && g_VoteCount < want; pass++)
 	{
+		ArrayClear(pool);
 		for (new i = 0; i < total; i++)
 		{
 			ArrayGetString(g_Maps, i, map, charsmax(map));
@@ -1733,15 +1801,13 @@ start_vote(bool:rtv)
 				ArrayPushString(pool, map);
 			}
 		}
-	}
-	g_VoteCount = 0;
-	new want = clamp(get_pcvar_num(g_pVoteMaps), 2, MAX_VOTE_ITEMS - 1);
-	while (g_VoteCount < want && ArraySize(pool) > 0)
-	{
-		new pick = random(ArraySize(pool));
-		ArrayGetString(pool, pick, g_VoteMaps[g_VoteCount], charsmax(g_VoteMaps[]));
-		ArrayDeleteItem(pool, pick);
-		g_VoteCount++;
+		while (g_VoteCount < want && ArraySize(pool) > 0)
+		{
+			new pick = random(ArraySize(pool));
+			ArrayGetString(pool, pick, g_VoteMaps[g_VoteCount], charsmax(g_VoteMaps[]));
+			ArrayDeleteItem(pool, pick);
+			g_VoteCount++;
+		}
 	}
 	ArrayDestroy(pool);
 
@@ -1767,15 +1833,46 @@ start_vote(bool:rtv)
 	menu_setprop(g_VoteMenu, MPROP_EXIT, MEXIT_NEVER);
 
 	new votetime = clamp(get_pcvar_num(g_pVoteTime), 5, 60);
+	g_VoteEnd = get_gametime() + float(votetime);
 	new players[MAX_PLAYERS], num;
 	get_players(players, num, "ch");
 	for (new i = 0; i < num; i++)
 	{
 		menu_display(players[i], g_VoteMenu, 0, votetime);
 	}
-	client_print_color(0, print_team_default, "^4[Mapa]^1 %s Votá el próximo mapa (%d segundos).", rtv ? "¡Rock the vote!" : "Se termina el mapa.", votetime);
+	client_print_color(0, print_team_default, "^4[Mapa]^1 %s Votá el próximo mapa (%d segundos). Si se te cierra el menú: ^4/votar^1.", rtv ? "¡Rock the vote!" : "Se termina el mapa.", votetime);
 	client_cmd(0, "spk ^"Gman/Gman_Choose2^"");
 	set_task(float(votetime), "end_vote", TASK_VOTE_END);
+}
+
+/**
+ * Muestra la votación a quien todavía no votó: otro menú (el de armas, los de Claudia) se la pudo
+ * haber tapado. Sin $force, no pisa un menú que esté abierto.
+ */
+bool:show_vote(id, bool:force)
+{
+	if (!g_Voting || g_Voted[id] || !is_user_connected(id))
+	{
+		return false;
+	}
+	new left = floatround(g_VoteEnd - get_gametime(), floatround_ceil);
+	if (left < 1)
+	{
+		return false;
+	}
+	new oldm, newm;
+	player_menu_info(id, oldm, newm);
+	if (newm == g_VoteMenu || (!force && (newm != -1 || oldm > 0)))
+	{
+		return newm == g_VoteMenu;
+	}
+	menu_display(id, g_VoteMenu, 0, left);
+	return true;
+}
+
+public task_show_vote(taskid)
+{
+	show_vote(taskid - TASK_VOTE_SHOW, false);
 }
 
 public vote_handler(id, menu, item)
@@ -1897,12 +1994,30 @@ rock_the_vote(id)
 	if (g_Rtv[id])
 	{
 		client_print_color(id, print_team_default, "^4[Mapa]^1 Ya votaste para cambiar de mapa.");
+		// Si se fue gente desde que votó, puede que ya alcancen.
+		check_rtv();
 		return;
 	}
 	g_Rtv[id] = true;
 
-	new players[MAX_PLAYERS], num, count;
+	new count, needed;
+	rtv_count(count, needed);
+	if (count < needed)
+	{
+		new name[32];
+		get_user_name(id, name, charsmax(name));
+		client_print_color(0, id, "^4[Mapa]^3 %s^1 quiere cambiar de mapa (%d/%d). Escribí ^4rtv^1 para sumarte.", name, count, needed);
+		return;
+	}
+	check_rtv();
+}
+
+/** Pedidos de rtv entre los conectados y cuántos hacen falta. */
+rtv_count(&count, &needed)
+{
+	new players[MAX_PLAYERS], num;
 	get_players(players, num, "ch");
+	count = 0;
 	for (new i = 0; i < num; i++)
 	{
 		if (g_Rtv[players[i]])
@@ -1910,12 +2025,20 @@ rock_the_vote(id)
 			count++;
 		}
 	}
-	new needed = max(1, floatround(float(num) * get_pcvar_float(g_pRtvRatio), floatround_ceil));
-	new name[32];
-	get_user_name(id, name, charsmax(name));
-	if (count < needed)
+	needed = max(1, floatround(float(num) * get_pcvar_float(g_pRtvRatio), floatround_ceil));
+}
+
+/** Si ya alcanzan los pedidos (también cuando se va alguien que no había pedido), cambia de mapa. */
+check_rtv()
+{
+	if (g_Voting || task_exists(TASK_CHANGE))
 	{
-		client_print_color(0, id, "^4[Mapa]^3 %s^1 quiere cambiar de mapa (%d/%d). Escribí ^4rtv^1 para sumarte.", name, count, needed);
+		return;
+	}
+	new count, needed;
+	rtv_count(count, needed);
+	if (count == 0 || count < needed)
+	{
 		return;
 	}
 	if (g_VoteDone)
@@ -1925,4 +2048,9 @@ rock_the_vote(id)
 		return;
 	}
 	start_vote(true);
+}
+
+public task_check_rtv()
+{
+	check_rtv();
 }

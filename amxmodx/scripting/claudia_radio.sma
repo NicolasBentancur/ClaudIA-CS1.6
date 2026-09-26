@@ -94,12 +94,9 @@ public claudia_say_command(id, const cmd[], const args[])
 	{
 		return PLUGIN_CONTINUE;
 	}
-	new sub[8];
-	copy(sub, charsmax(sub), args);
-	trim(sub);
-	strtolower(sub);
-	new bool:on = equal(sub, "on") || equal(sub, "prender");
-	new bool:off = equal(sub, "off") || equal(sub, "apagar");
+	// El argumento entero (el núcleo ya lo recorta): "/radio apagar la luz" es un pedido, no apagar la radio.
+	new bool:on = equali(args, "on") || equali(args, "prender");
+	new bool:off = equali(args, "off") || equali(args, "apagar");
 	if (!on && !off)
 	{
 		return PLUGIN_CONTINUE;

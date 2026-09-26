@@ -44,7 +44,9 @@ final class Permissions
 
     public function minRole(string $permission): int
     {
-        $name = $this->config->string("roles.permissions.{$permission}", self::DEFAULTS[$permission] ?? 'owner');
+        // Las claves de roles.json llevan punto ("players.profile_full"): se buscan enteras, porque
+        // Config::get() parte la ruta en cada punto y nunca las encontraría.
+        $name = (string) ($this->config->array('roles.permissions')[$permission] ?? self::DEFAULTS[$permission] ?? 'owner');
         return Role::fromName($name);
     }
 

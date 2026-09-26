@@ -13,6 +13,9 @@
     "max_reply_lines": 2,
     "strip_accents": false,
 
+    "_rate_limit_backoff_seconds": "un modelo que responde 429 (sin cupo) no se vuelve a probar durante estos segundos",
+    "rate_limit_backoff_seconds": 60,
+
     "_on_all_fail": "silence = no responde; message = manda all_fail_message",
     "on_all_fail": "message",
     "all_fail_message": "Me quedé sin cuota, bo. Después hablamos.",

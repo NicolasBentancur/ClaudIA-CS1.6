@@ -5,7 +5,7 @@ Hay dos lugares de configuración:
 - **Plugin** (cvars en `addons/amxmodx/configs/claudia/claudia.cfg`): conexión, tiempo de login y flags de acceso.
 - **Servicio** (`service/config/*.json`, separados por categoría): todo lo demás.
 
-Las claves de los JSON que empiezan con `_` son comentarios. Después de editar un JSON, `amx_claudia_reload` lo recarga sin reiniciar. Los puertos y la base de datos solo cambian al reiniciar el servicio.
+Las claves de los JSON que empiezan con `_` son comentarios. Después de editar un JSON, `amx_claudia_reload` lo recarga sin reiniciar. Solo cambian al reiniciar el servicio: los puertos, la base de datos, el secreto del plugin, `timezone`, `log`, `ca_bundle` y `session_resume_seconds`. Las API keys de `secrets.json` se toman al recargar (las de variables de entorno, al reiniciar).
 
 ## claudia.cfg (plugin)
 
@@ -41,18 +41,29 @@ Roles: jugador < admin < staff < owner. Cada rol tiene todo lo del anterior. `pe
 | `nickname` | Largo máximo y palabras prohibidas de `/apodo`. |
 | `games.idle_seconds` | Cuándo se cierra una mesa inactiva. |
 | `debug.time_offset_seconds` | Adelanta el reloj para probar vencimientos y sueldos. **0 en producción.** |
+| `timezone` | Zona horaria (recordatorios, cumpleaños, fechas). |
+| `chat_tag` | Prefijo de los mensajes del sistema (`{green}[Claudia]{default} `). |
+| `database` | Ruta de la base SQLite. |
+| `ca_bundle` | Archivo de certificados para HTTPS; vacío = el del sistema (la verificación queda activa igual). |
+| `log.file` / `log.level` | Archivo y nivel del log. |
 
 ## ai.json + personality.md
 
 - `personality.md`: la personalidad de Claudia (el prompt de sistema). Editalo libremente.
 - `mention_keywords`: palabras que cuentan como mención directa o acortada. Se comparan como palabra completa, sin importar mayúsculas ni tildes.
 - `cooldown_seconds` (25): el jugador no dispara otra petición a la IA si en ese tiempo obtuvo una respuesta o mencionó a Claudia. Puede seguir chateando.
-- `global_limit_per_minute` (5): tope total de peticiones por minuto.
+- `global_limit_per_minute` (5): tope de conversaciones por minuto. Si el primer modelo falla, una misma conversación prueba los siguientes, así que puede hacer más de un pedido.
 - `recent_game_seconds` (20): si el jugador jugó en el casino hace menos de esto, su comentario dispara la IA, y el resumen del juego se agrega al contexto.
 - `history_messages` (15): mensajes previos que se mandan como contexto.
 - `models`: orden de fallback. Cada modelo tiene su `timeout`, y los de Groq aceptan `extra` para parámetros específicos del modelo.
+- `rate_limit_backoff_seconds` (60): un modelo que responde 429 (sin cupo) no se vuelve a probar durante ese tiempo. Si un proveedor bloquea el mensaje por seguridad, no se prueban sus otros modelos en esa conversación.
 - `on_all_fail`: `silence` (no responde) o `message` (manda `all_fail_message`).
-- `memory.summary_threshold_words` (3000): cuando la memoria de un usuario lo supera, la IA la resume.
+- `chat_prefix`: cómo firma Claudia en el chat (`{green}Claudia{default}: `).
+- `max_reply_chars` (180): largo que se le pide a la IA. El corte real es por líneas: `max_reply_lines` (2) líneas de chat.
+- `strip_accents`: saca las tildes de las respuestas (para clientes que no las muestran).
+- `gemini`: `endpoint`, `temperature`, `max_output_tokens`, `thinking_level`, y los filtros de seguridad (`safety_threshold` para cada una de `safety_categories`). Sin filtros configurados, Gemini 2.5 y 3 los tienen apagados: cualquier umbral los endurece.
+- `groq`: `endpoint`, `temperature` y `max_tokens` (se manda como `max_completion_tokens`).
+- `memory.summary_threshold_words` (3000): cuando la memoria de un usuario lo supera, la IA la resume. Si el resumen de alguien falla, se lo saltea una hora para no trabar a los demás.
 
 La IA devuelve JSON estructurado con estos campos: `responder`, `respuesta`, `pensamiento`, `trato` y `datos`. El pensamiento, el trato y los datos se guardan como memoria del jugador.
 

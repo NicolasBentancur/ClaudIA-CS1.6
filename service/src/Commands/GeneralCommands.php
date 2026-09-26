@@ -66,9 +66,10 @@ final class GeneralCommands
                 $user = $app->findUser($query);
             }
             $uid = (int) $user['id'];
-            $full = $c->staff || $uid === $self;
+            $staffView = $app->perms->allows($c->role, 'players.profile_full');
+            $full = $staffView || $uid === $self;
             self::showProfile($app, $c, $user, $full);
-            if ($c->staff) {
+            if ($staffView) {
                 self::showStaffDetail($app, $c, $user);
             }
         }, '[nick] - tu perfil o el de otro jugador', 'General', false);

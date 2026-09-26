@@ -20,13 +20,22 @@ final class Text
         return strtr($text, ['{green}' => self::GREEN, '{default}' => self::DEFAULT, '{team}' => self::TEAM]);
     }
 
-    /** Quita caracteres de control (incluye los códigos de color) y colapsa espacios. */
+    /**
+     * Neutraliza {green} {default} {team} en texto que no escribimos nosotros (nick, apodo, chat,
+     * respuesta de la IA): si no, al mandarlo se vuelven colores y se puede imitar un mensaje del sistema.
+     */
+    public static function untag(string $text): string
+    {
+        return strtr($text, ['{green}' => '(green)', '{default}' => '(default)', '{team}' => '(team)']);
+    }
+
+    /** Quita caracteres de control (incluye los códigos de color), neutraliza las etiquetas de color y colapsa espacios. */
     public static function sanitize(string $text): string
     {
         $text = self::validUtf8($text);
         $text = preg_replace('/[\x00-\x1F\x7F]/u', ' ', $text) ?? '';
         $text = preg_replace('/\s+/u', ' ', $text) ?? '';
-        return trim($text);
+        return trim(self::untag($text));
     }
 
     public static function validUtf8(string $text): string

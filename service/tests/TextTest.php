@@ -9,6 +9,15 @@ use PHPUnit\Framework\TestCase;
 
 final class TextTest extends TestCase
 {
+    public function testSanitizeNeutralizesColorTags(): void
+    {
+        $clean = Text::sanitize("{green}[Claudia]{default} Admin: {team}hola\x04");
+        $this->assertSame('(green)[Claudia](default) Admin: (team)hola', $clean);
+        // Lo que queda ya no se convierte en colores.
+        $this->assertSame($clean, Text::colors($clean));
+        $this->assertSame('{gre(green)en}', Text::sanitize('{gre{green}en}'));
+    }
+
     public function testSplitBytesRespectsLimitAndWords(): void
     {
         $text = str_repeat('palabra ñandú ', 40);

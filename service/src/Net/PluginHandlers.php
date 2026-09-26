@@ -85,11 +85,6 @@ final class PluginHandlers
             return ['registered' => $s->registered, 'logged' => false];
         });
 
-        $link->on('player.alive', function (array $d) use ($session): array {
-            $session($d)->alive = (bool) ($d['alive'] ?? false);
-            return [];
-        });
-
         $link->on('auth.register', function (array $d) use ($app, $session): array {
             $s = $session($d);
             $app->auth->register($s, (string) ($d['password'] ?? ''));

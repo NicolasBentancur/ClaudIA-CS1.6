@@ -6,6 +6,7 @@ namespace Claudia\Memory;
 
 use Claudia\Ai\AiRouter;
 use Claudia\Ai\PromptBuilder;
+use Claudia\Clock;
 use Claudia\Config;
 use Claudia\Log;
 use Claudia\Players\Users;
@@ -17,7 +18,13 @@ use Claudia\Players\Users;
  */
 final class Summarizer
 {
+    /** Si el resumen de alguien falla, se lo saltea este tiempo (si no, trabaría a todos los demás). */
+    private const RETRY_AFTER = 3600;
+
     private bool $running = false;
+
+    /** @var array<int, int> usuario => hasta cuándo no se reintenta */
+    private array $failedUntil = [];
 
     public function __construct(
         private readonly Config $config,
@@ -36,6 +43,9 @@ final class Summarizer
         $threshold = $this->config->int('ai.memory.summary_threshold_words', 3000);
         $candidates = $this->memory->usersOver($threshold);
         foreach ($candidates as $userId) {
+            if (($this->failedUntil[$userId] ?? 0) > Clock::now()) {
+                continue;
+            }
             // La consulta SQL es aproximada; se confirma contando palabras de verdad.
             if ($this->memory->wordCount($userId) > $threshold) {
                 $this->summarize($userId);
@@ -59,10 +69,14 @@ final class Summarizer
             function (?array $json) use ($userId, $upTo, $user): void {
                 $this->running = false;
                 if ($json === null) {
+                    $this->failedUntil[$userId] = Clock::now() + self::RETRY_AFTER;
                     Log::warning('No se pudo resumir la memoria', ['nick' => $user['nick']]);
                     return;
                 }
-                $this->memory->replaceWithSummary($userId, (string) $json['resumen'], $upTo);
+                if (!$this->memory->replaceWithSummary($userId, (string) $json['resumen'], $upTo)) {
+                    Log::info('La memoria se borró mientras se resumía: se descarta el resumen', ['nick' => $user['nick']]);
+                    return;
+                }
                 Log::info('Memoria resumida', ['nick' => $user['nick'], 'palabras' => $this->memory->wordCount($userId)]);
             }
         );

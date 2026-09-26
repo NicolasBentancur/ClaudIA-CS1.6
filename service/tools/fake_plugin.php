@@ -31,7 +31,9 @@ foreach (array_slice($argv, 1) as $a) {
 $host = $args[0] ?? '127.0.0.1';
 $port = (int) ($args[1] ?? 27100);
 $config = json_decode((string) @file_get_contents(dirname(__DIR__) . '/config/service.json'), true) ?: [];
-$secret = $args[2] ?? ($config['plugin']['secret'] ?? '');
+$secrets = json_decode((string) @file_get_contents(dirname(__DIR__) . '/config/secrets.json'), true) ?: [];
+// Mismo orden que bin/claudia.php: CLAUDIA_PLUGIN_SECRET, secrets.json y, de respaldo, service.json.
+$secret = $args[2] ?? ((string) getenv('CLAUDIA_PLUGIN_SECRET') ?: (string) ($secrets['plugin_secret'] ?? '') ?: (string) ($config['plugin']['secret'] ?? ''));
 
 $sock = @stream_socket_client("tcp://{$host}:{$port}", $errno, $errstr, 5);
 if (!$sock) {

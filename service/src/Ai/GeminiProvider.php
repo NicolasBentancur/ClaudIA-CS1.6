@@ -12,16 +12,18 @@ use Claudia\Net\AsyncHttp;
  */
 final class GeminiProvider implements Provider
 {
+    /** @param \Closure():string $apiKey se lee en cada pedido: amx_claudia_reload toma una key nueva de secrets.json */
     public function __construct(
         private readonly AsyncHttp $http,
         private readonly Config $config,
-        private readonly string $apiKey,
+        private readonly \Closure $apiKey,
     ) {
     }
 
     public function generate(array $prompt, array $model, callable $done): void
     {
-        if ($this->apiKey === '') {
+        $apiKey = ($this->apiKey)();
+        if ($apiKey === '') {
             $done(null, 'sin API key de Gemini');
             return;
         }
@@ -52,7 +54,7 @@ final class GeminiProvider implements Provider
         $url = str_replace('{model}', rawurlencode((string) $model['model']), (string) ($cfg['endpoint'] ?? ''));
         $this->http->post(
             $url,
-            ['Content-Type' => 'application/json', 'x-goog-api-key' => $this->apiKey],
+            ['Content-Type' => 'application/json', 'x-goog-api-key' => $apiKey],
             (string) json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             (float) ($model['timeout'] ?? 12),
             function (int $status, string $raw, ?string $error) use ($done): void {

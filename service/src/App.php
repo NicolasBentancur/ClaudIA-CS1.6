@@ -159,8 +159,8 @@ final class App
         $this->memory = new MemoryService($db);
         $this->prompts = new PromptBuilder($config, $this->users, $this->memory, fn (int $uid) => $this->factsFor($uid));
         $providers ??= [
-            'gemini' => new GeminiProvider($this->http, $config, self::secret($config, 'gemini_api_key', 'GEMINI_API_KEY')),
-            'groq' => new GroqProvider($this->http, $config, self::secret($config, 'groq_api_key', 'GROQ_API_KEY')),
+            'gemini' => new GeminiProvider($this->http, $config, fn (): string => self::secret($config, 'gemini_api_key', 'GEMINI_API_KEY')),
+            'groq' => new GroqProvider($this->http, $config, fn (): string => self::secret($config, 'groq_api_key', 'GROQ_API_KEY')),
         ];
         $this->ai = new AiRouter($config, $providers);
         $this->chat = new ChatService($config, $this->buffer, $this->policy, $this->recentGames, $this->prompts, $this->ai, $this->memory, $this->users, $this->out, $this->events);
@@ -274,7 +274,7 @@ final class App
 
     public function nick(int $userId): string
     {
-        return (string) ($this->users->find($userId)['nick'] ?? '?');
+        return Text::untag((string) ($this->users->find($userId)['nick'] ?? '?'));
     }
 
     /** Avisa por chat a un usuario si está conectado. */
