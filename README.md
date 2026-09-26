@@ -164,6 +164,8 @@ cd service
 php vendor/bin/phpunit
 ```
 
+En GitHub, cada push y pull request corre los tests (PHP 8.2 y 8.5) y compila los plugins (`.github/workflows/ci.yml`). Los plugins compilados quedan como artefacto `cstrike` de cada corrida, listos para copiar en la carpeta `cstrike` del servidor.
+
 Para probar el servicio sin el juego está `tools/fake_plugin.php`, un cliente que habla el mismo protocolo que el plugin. Ejemplo: `php tools/fake_plugin.php --script=guion.txt`.
 
 Más detalle en [docs/configuracion.md](docs/configuracion.md) y [docs/protocolo.md](docs/protocolo.md).

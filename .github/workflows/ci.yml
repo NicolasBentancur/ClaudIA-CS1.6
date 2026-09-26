@@ -1,0 +1,96 @@
+# Integración continua: en cada push y pull request corre los tests del servicio y compila los plugins.
+# Los plugins compilados (build/cstrike, listo para copiar en cstrike/) quedan como artefacto "cstrike".
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    # Con shell explícito, bash corre con pipefail: un curl que falla dentro de un pipe corta el paso.
+    shell: bash
+
+jobs:
+  service:
+    name: Servicio (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # La mínima que pide composer.json y la última.
+        php: ['8.2', '8.5']
+    defaults:
+      run:
+        working-directory: service
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, mbstring, pdo_sqlite
+          coverage: none
+          tools: composer
+
+      - name: Sintaxis (incluye bin/ y tools/, que los tests no cargan)
+        run: find bin src tests tools -name '*.php' -print0 | xargs -0 -n1 php -d display_errors=stderr -l > /dev/null
+
+      - name: Instalar dependencias
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Tests
+        run: vendor/bin/phpunit
+
+  plugins:
+    name: Plugins AMXX
+    runs-on: ubuntu-latest
+    env:
+      # Versiones fijas para que la compilación sea reproducible. Para actualizar, cambiarlas acá.
+      AMXX_BUILD: amxmodx-1.10.0-git5486-base-linux.tar.gz
+      REAPI_VERSION: 5.29.0.358
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Bibliotecas de 32 bits (amxxpc es de 32 bits)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends lib32stdc++6
+
+      - uses: actions/cache@v6
+        id: tools
+        with:
+          path: .tools/amxx
+          key: ${{ runner.os }}-amxx-${{ env.AMXX_BUILD }}-reapi-${{ env.REAPI_VERSION }}
+
+      - name: Bajar el compilador de AMX Mod X y los includes de ReAPI
+        if: steps.tools.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p .tools/amxx
+          curl -fsSL "https://www.amxmodx.org/amxxdrop/1.10/$AMXX_BUILD" | tar xz -C .tools/amxx
+          curl -fsSL -o reapi.zip "https://github.com/rehlds/ReAPI/releases/download/$REAPI_VERSION/reapi-bin-$REAPI_VERSION.zip"
+          unzip -q -j -o reapi.zip 'addons/amxmodx/scripting/include/*' -d .tools/amxx/addons/amxmodx/scripting/include
+          rm reapi.zip
+
+      # compilar.sh usa el compilador de .tools/amxx y sale con error si algún plugin no compila.
+      - name: Compilar
+        run: sh compilar.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cstrike
+          path: build/cstrike
+          if-no-files-found: error
+          retention-days: 30
