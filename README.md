@@ -6,8 +6,6 @@
 
 Plugin de Counter-Strike 1.6 (AMX Mod X 1.10 + ReHLDS) con una IA de personalidad uruguaya en el chat, cuentas con contraseña, economía en URU Coins (bancos, préstamos y Clearing), trabajos, perfiles, rankings, recordatorios y un casino (ruleta francesa, blackjack, minas y slots) y ajedrez 1 contra 1 por apuesta que se juegan en la ventana MOTD.
 
-[@carlosplanchon](https://github.com/carlosplanchon) ayudó en el hardening.
-
 ```
  CS 1.6 (ReHLDS)                     Misma PC                            Nube
 ┌──────────────────┐  TCP localhost  ┌─────────────────────────────┐  HTTPS  ┌──────────────┐
@@ -194,6 +192,12 @@ Y esta es la foto de perfil de Claudia en WhatsApp, en [ClaudIA](https://github.
 </p>
 
 Las imágenes de `assets/` en las que aparece Bender, de *Futurama*, incluido el banner, las hizo [@TheShrekMaster](https://github.com/TheShrekMaster). No están cubiertas por la licencia MIT del código: los derechos de las imágenes son de su autor y los del personaje, de sus respectivos propietarios.
+
+## Créditos
+
+- [@NicolasBentancur](https://github.com/NicolasBentancur): autor.
+- [@carlosplanchon](https://github.com/carlosplanchon): hardening (seguridad, integridad de la economía y CI).
+- [@TheShrekMaster](https://github.com/TheShrekMaster): imágenes.
 
 ## Related Projects
 
